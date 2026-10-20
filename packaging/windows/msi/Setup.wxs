@@ -8,6 +8,8 @@
     <Launch Condition="Installed OR NOT RollbackDisabled" Message="Enable Windows Installer rollback before installing Luma." />
     <Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" />
     <Property Id="ARPURLINFOABOUT" Value="https://luma.ksmvc.ch" />
+    <Icon Id="LumaAppIcon.ico" SourceFile="$(var.Icon)" />
+    <Property Id="ARPPRODUCTICON" Value="LumaAppIcon.ico" />
     <StandardDirectory Id="LocalAppDataFolder">
       <Directory Id="LumaFolder" Name="Luma">
         <Component Id="ParentFolderCleanup" Guid="CB3FBA47-BF78-478E-86CB-1C39C7D22F59">

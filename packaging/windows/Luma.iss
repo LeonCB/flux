@@ -25,10 +25,11 @@ OutputBaseFilename=Luma-{#AppVersion}-Setup-x64
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
-UninstallDisplayIcon={app}\Luma.scr
+UninstallDisplayIcon={app}\Luma.ico
 VersionInfoVersion={#AppVersion}.0
 
 [Files]
+Source: "Luma.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#PayloadDir}\Luma.scr"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#PayloadDir}\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#PayloadDir}\deployment.ps1"; DestDir: "{app}"; Flags: ignoreversion

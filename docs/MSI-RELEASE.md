@@ -19,6 +19,12 @@ MSI installs in `%LOCALAPPDATA%\Luma\MSI`, without administrator rights or UAC.
 It has a separate upgrade family from the experimental prototype/candidate:
 `A51E59BE-C086-48C8-8BDA-B382C44316AE`. Test hooks are absent from production.
 WiX and its UI extension are pinned at 6.0.2; the native DLL uses a static CRT.
+Windows Installed Apps and Programs and Features use an embedded `Luma.ico`,
+derived from the site's existing `site/icon.svg`, through `ARPPRODUCTICON` and
+the MSI Icon table. Windows Installer caches the icon; it does not add a third
+payload file or require rebuilding the screensaver. Regenerate the multi-size
+ICO with `./scripts/generate-windows-icon.ps1` when the site symbol changes.
+Already installed copies receive the icon when updated with a newer MSI.
 The [WiX maintenance-fee policy](https://docs.firegiant.com/wix/whatsnew/)
 requires payment for revenue-generating use; Luma is an individual, noncommercial
 open-source project. Reassess the tool policy if that changes.

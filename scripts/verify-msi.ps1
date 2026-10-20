@@ -22,6 +22,9 @@ try {
     Assert ($properties.ProductName -eq 'Luma' -and $properties.ProductVersion -eq $Version) 'Incorrect MSI identity/version.'
     Assert ($properties.UpgradeCode -eq '{A51E59BE-C086-48C8-8BDA-B382C44316AE}') 'Incorrect production upgrade family.'
     Assert (!$properties.ALLUSERS) 'MSI must remain per-user.'
+    Assert ($properties.ARPPRODUCTICON -ceq 'LumaAppIcon.ico') 'Installed Apps must use the Luma icon.'
+    $icons = @(Read-Table 'SELECT `Name` FROM `Icon`' 1)
+    Assert ($icons -ccontains $properties.ARPPRODUCTICON) 'The application icon must be embedded in the MSI Icon table.'
     $summary = $db.SummaryInformation(0)
     Assert ($summary.Property(7) -like 'x64*') 'MSI must be x64.'
     Assert (([int]$summary.Property(15) -band 8) -ne 0) 'MSI must declare that elevation is not required.'
@@ -36,6 +39,9 @@ try {
     $tools = Get-LumaWix
     & $tools.Compiler msi decompile (Resolve-Path -LiteralPath $MsiPath).Path -x $extract -o (Join-Path $extract 'Package.wxs')
     if ($LASTEXITCODE -ne 0) { throw 'MSI extraction failed.' }
+    $embeddedIcon = Join-Path $extract ('Icon/' + $properties.ARPPRODUCTICON)
+    $sourceIcon = Join-Path (Split-Path $PSScriptRoot -Parent) 'packaging/windows/Luma.ico'
+    Assert ((Test-Path -LiteralPath $embeddedIcon) -and (Get-FileHash -LiteralPath $embeddedIcon).Hash -eq (Get-FileHash -LiteralPath $sourceIcon).Hash) 'The embedded Installed Apps icon differs from the Luma asset.'
     foreach ($row in $files) {
         $name = ($row[1] -split '\|')[-1]
         $embedded = @(Get-ChildItem -LiteralPath $extract -Recurse -File | Where-Object Name -eq $row[0])
@@ -50,7 +56,7 @@ try {
     }
     Assert ($properties.MSIRESTARTMANAGERCONTROL -eq 'Disable') 'MSI must not force-close running applications.'
     Assert ($properties.SecureCustomProperties -match 'LEGACY_UNINSTALL' -and $properties.MsiHiddenProperties -match 'LEGACY_UNINSTALL') 'Legacy client snapshot must be secure and hidden.'
-    Write-Output 'PASS: MSI identity, version, per-user/no-elevation scope, native actions and payload metadata.'
+    Write-Output 'PASS: MSI identity, version, per-user/no-elevation scope, native actions, Installed Apps icon and payload metadata.'
 } finally {
     [Runtime.InteropServices.Marshal]::FinalReleaseComObject($db) | Out-Null
     [Runtime.InteropServices.Marshal]::FinalReleaseComObject($installer) | Out-Null
