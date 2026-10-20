@@ -1322,7 +1322,7 @@ dependencies = [
 
 [[package]]
 name = "luma"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "approx",
  "bytemuck",
@@ -1343,7 +1343,7 @@ dependencies = [
 
 [[package]]
 name = "luma-desktop"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "bytemuck",
  "env_logger",

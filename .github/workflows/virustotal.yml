@@ -7,7 +7,7 @@ on:
       tag:
         description: Existing release tag (installer, ZIP and SHA256SUMS.txt must be uploaded)
         required: true
-        default: v0.1.1
+        default: v0.1.2
       report_only:
         description: Refresh recorded analyses without uploading the files again
         type: boolean

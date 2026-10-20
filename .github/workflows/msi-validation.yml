@@ -34,29 +34,38 @@ jobs:
           cargo test --locked --manifest-path packaging/windows/msi/Cargo.toml
           if ($LASTEXITCODE -ne 0) { throw 'Native action tests failed.' }
       - name: Build and verify final MSI and ZIP
-        run: ./scripts/package-release.ps1
+        run: |
+          $metadata = cargo metadata --locked --no-deps --format-version 1 | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0) { throw 'Cargo metadata failed.' }
+          $version = ($metadata.packages | Where-Object name -eq 'luma-desktop').version
+          "LUMA_VERSION=$version" | Add-Content $env:GITHUB_ENV
+          ./scripts/package-release.ps1
       - name: Test native MSI integration on a disposable runner
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           $payload = Join-Path $PWD 'target/integration-payload'
-          Expand-Archive target/releases/0.1.1/Luma-0.1.1-windows-x64.zip $payload
+          $version = $env:LUMA_VERSION
+          $parts = $version.Split('.')
+          if ([int]$parts[2] -ge 65535) { throw 'Integration upgrade version exceeds MSI limits.' }
+          $upgradeVersion = "$($parts[0]).$($parts[1]).$([int]$parts[2] + 1)"
+          Expand-Archive "target/releases/$version/Luma-$version-windows-x64.zip" $payload
           $payload = Join-Path $payload 'Luma-windows-x64'
-          ./scripts/package-msi.ps1 -Version 0.1.1 -PayloadDirectory $payload -TestHooks
-          ./scripts/package-msi.ps1 -Version 0.1.2 -PayloadDirectory $payload -TestHooks
+          ./scripts/package-msi.ps1 -Version $version -PayloadDirectory $payload -TestHooks
+          ./scripts/package-msi.ps1 -Version $upgradeVersion -PayloadDirectory $payload -TestHooks
           $identity = [Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent())
           "Runner is elevated: $($identity.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)). A pass here does not establish non-elevated behavior." | Add-Content $env:GITHUB_STEP_SUMMARY
           # The legacy Inno EXE is retired from public downloads. The actual
           # migration pass is recorded in run 38076913244; retained local copies
           # can still be supplied with -LegacySetupPath for migration regression.
-          ./scripts/test-msi-release.ps1 -MsiPath target/msi/0.1.1/test/Luma-0.1.1-Setup-x64.msi -UpgradeMsiPath target/msi/0.1.2/test/Luma-0.1.2-Setup-x64.msi -PayloadDirectory $payload
+          ./scripts/test-msi-release.ps1 -MsiPath "target/msi/$version/test/Luma-$version-Setup-x64.msi" -UpgradeMsiPath "target/msi/$upgradeVersion/test/Luma-$upgradeVersion-Setup-x64.msi" -PayloadDirectory $payload
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: luma-msi-release-review
           path: |
-            target/releases/0.1.1/Luma-0.1.1-Setup-x64.msi
-            target/releases/0.1.1/Luma-0.1.1-windows-x64.zip
-            target/releases/0.1.1/SHA256SUMS.txt
+            target/releases/${{ env.LUMA_VERSION }}/Luma-${{ env.LUMA_VERSION }}-Setup-x64.msi
+            target/releases/${{ env.LUMA_VERSION }}/Luma-${{ env.LUMA_VERSION }}-windows-x64.zip
+            target/releases/${{ env.LUMA_VERSION }}/SHA256SUMS.txt
             target/msi-release-tests-*/
           if-no-files-found: error
