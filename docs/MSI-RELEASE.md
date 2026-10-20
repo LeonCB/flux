@@ -1,11 +1,12 @@
 # Production MSI release preparation
 
-Luma v0.1.1 is published as a stable release with a known uninstall rollback
-limitation and tested recovery instructions. On 2026-10-12 the maintainer
-explicitly authorized promotion of the existing pre-release, prioritizing
-installation/migration and withdrawal of the old Inno EXE. The same verified
-MSI and ZIP are retained. This release decision does not turn the failing
-rollback test into a pass or claim the defect is fixed.
+Luma v0.1.2 adds the Windows Installed Apps icon to the stable MSI distribution.
+It retains the known uninstall rollback limitation and tested recovery instructions.
+The maintainer first authorized stable distribution with that limitation for
+v0.1.1 on 2026-10-12, prioritizing installation/migration and withdrawal of the
+old Inno EXE. The original v0.1.1 packages and checksums remain unchanged.
+Stable publication does not turn the failing rollback test into a pass or claim
+the defect is fixed.
 
 The initial 2026-10-10 pre-release decision and investigation are historical
 evidence; the stable publication decision below supersedes that distribution policy.
@@ -248,3 +249,43 @@ or replace its assets. README and website disclose the uninstall limitation:
 a failed uninstall rollback can leave files after the next removal. Run the same
 MSI to reinstall/repair, then retry removal, as verified by the recovery tests.
 This is acceptance of a known issue, not a correction of it.
+
+## Luma v0.1.2 icon release, 2026-10-20
+
+The release adds the existing Luma website symbol to Windows Installed Apps and
+Programs and Features via the MSI Icon table and `ARPPRODUCTICON`. The exact
+embedded icon is compared with the committed asset during package validation.
+The ICO has eight sizes, from 16 to 256 pixels; native Windows icon loading was
+checked at every size. An existing MSI install receives the icon through update.
+
+- Release tag: `v0.1.2`, source commit `95b1150`.
+- Local application tests: 52 passed, with GPU/interactive-only tests skipped.
+- Native installer unit tests: 4 passed; deployment, uninstall handoff and
+  VirusTotal integration tests passed.
+- [Draft packaging workflow](https://github.com/Ken5998/luma/actions/runs/39433544379): passed.
+- [MSI validation workflow](https://github.com/Ken5998/luma/actions/runs/39433543902): passed,
+  including upgrade, downgrade prevention, selection restoration, ZIP migration,
+  failed-install rollback, uninstall rollback and cleanup on an elevated runner.
+  This does not establish that non-elevated uninstall rollback is fixed.
+- The actual draft release packages were downloaded and independently checked
+  for exact contents, embedded icon, no-elevation metadata and SHA-256 checksums.
+- Animation, palettes and clock behavior are unchanged in this patch.
+
+| Final release file | SHA-256 |
+| --- | --- |
+| Luma-0.1.2-Setup-x64.msi | 51bf10f118f33583ee115f025f6c55d1defe3d34f5c31bd95d1e8f1f2b2bede6 |
+| Luma-0.1.2-windows-x64.zip | 1723690b480dee00717e8b2535f3cc3c951a35cb6265f9b135212da8e8799971 |
+
+Final VirusTotal analyses completed on 2026-10-20 for both exact release files:
+[MSI](https://www.virustotal.com/gui/file/51bf10f118f33583ee115f025f6c55d1defe3d34f5c31bd95d1e8f1f2b2bede6/detection)
+reported 0 malicious and 0 suspicious results (62 undetected; 13 unsupported);
+[ZIP](https://www.virustotal.com/gui/file/1723690b480dee00717e8b2535f3cc3c951a35cb6265f9b135212da8e8799971/detection)
+reported 0 malicious and 0 suspicious results (68 undetected).
+[Scan status refresh](https://github.com/Ken5998/luma/actions/runs/39436184536)
+reused the original analysis IDs; the files were not reuploaded while queued.
+These results do not imply that unsupported engines scanned the MSI.
+
+The verified draft was published as [v0.1.2](https://github.com/Ken5998/luma/releases/tag/v0.1.2)
+on 2026-10-20, with the same scanned assets and checksums. README and website
+references were advanced to v0.1.2 after publication. The known non-elevated
+uninstall rollback limitation remains documented in the release notes.

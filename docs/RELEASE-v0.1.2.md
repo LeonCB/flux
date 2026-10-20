@@ -32,3 +32,16 @@ The known limitation from v0.1.1 remains: if an MSI uninstall fails and rolls ba
 The tested recovery is to run the same MSI again to reinstall/repair, then retry removal. Keep the MSI if you need recovery. Do not manually delete Windows Installer registry entries. [Investigation and evidence](https://github.com/Ken5998/luma/blob/main/docs/MSI-RELEASE.md) · [Upstream report](https://github.com/wixtoolset/issues/issues/8574#issuecomment-6101186682).
 
 Luma remains an independent MIT-licensed fork of Flux by Sander Melnikov. Appearance preferences in `%LOCALAPPDATA%\Luma\settings.json` are preserved.
+
+<!-- luma-virustotal:start -->
+## VirusTotal
+
+These release files are public samples. Reports are informational: false positives are possible, and zero detections do not guarantee safety. This does not replace code signing or remove SmartScreen warnings.
+
+Last checked: 2026-10-20 14:06 UTC.
+
+- [Luma-0.1.2-Setup-x64.msi](https://www.virustotal.com/gui/file/51bf10f118f33583ee115f025f6c55d1defe3d34f5c31bd95d1e8f1f2b2bede6/detection) — submitted; analysis ID: `YjEyMzU1YjdhNWU1M2I5OTczNGVkM2E1Nzk1N2UyNzU6MTc5MjUwNDY3NA==`.
+  Analysis completed: 0 malicious, 0 suspicious engine results. See report for context.
+- [Luma-0.1.2-windows-x64.zip](https://www.virustotal.com/gui/file/1723690b480dee00717e8b2535f3cc3c951a35cb6265f9b135212da8e8799971/detection) — submitted; analysis ID: `MTBkYTM4NjlkOGJiM2EyM2ZiY2M3OGNlZTNjZmEwMTY6MTc5MjUwNDczOA==`.
+  Analysis completed: 0 malicious, 0 suspicious engine results. See report for context.
+<!-- luma-virustotal:end -->

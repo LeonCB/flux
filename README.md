@@ -21,11 +21,11 @@ Luma is an independent MIT-licensed fork, currently under development.
 
 ## Install, update, or uninstall
 
-**[v0.1.1 is the latest stable release](https://github.com/Ken5998/luma/releases/tag/v0.1.1), with a native per-user MSI installer and an alternative ZIP package.**
+**[v0.1.2 is the latest stable release](https://github.com/Ken5998/luma/releases/tag/v0.1.2), with a native per-user MSI installer and an alternative ZIP package.**
 
-- **[Luma-0.1.1-Setup-x64.msi](https://github.com/Ken5998/luma/releases/download/v0.1.1/Luma-0.1.1-Setup-x64.msi)**: recommended graphical per-user installer with an Installed Apps entry. No administrator rights are needed.
-- **[Luma-0.1.1-windows-x64.zip](https://github.com/Ken5998/luma/releases/download/v0.1.1/Luma-0.1.1-windows-x64.zip)**: extract all files and run **Install.cmd**. No administrator rights are needed.
-- **[SHA256SUMS.txt](https://github.com/Ken5998/luma/releases/download/v0.1.1/SHA256SUMS.txt)**: checksums for these exact packages. Packages are unsigned; current antivirus reports are linked in the release notes.
+- **[Luma-0.1.2-Setup-x64.msi](https://github.com/Ken5998/luma/releases/download/v0.1.2/Luma-0.1.2-Setup-x64.msi)**: recommended graphical per-user installer with an Installed Apps entry. No administrator rights are needed.
+- **[Luma-0.1.2-windows-x64.zip](https://github.com/Ken5998/luma/releases/download/v0.1.2/Luma-0.1.2-windows-x64.zip)**: extract all files and run **Install.cmd**. No administrator rights are needed.
+- **[SHA256SUMS.txt](https://github.com/Ken5998/luma/releases/download/v0.1.2/SHA256SUMS.txt)**: checksums for these exact packages. Current antivirus reports are linked in the release notes.
 
 The old Inno Setup EXE is withdrawn from public downloads following antivirus detections. The historical findings remain in [the installer investigation](docs/INSTALLER-TRUST.md); they are not a confirmed vendor classification correction.
 
@@ -75,7 +75,7 @@ Produces `target\distribution\Luma-windows-x64.zip` and its SHA-256 checksum. Th
 
 The installer is a **per-user MSI**, reusing the native Rust activation and
 restoration implementation. It does not require administrator rights and retains
-appearance preferences. v0.1.1 is published as stable with the documented
+appearance preferences. v0.1.2 is published as stable with the documented
 non-elevated uninstall rollback limitation and tested recovery instructions.
 See [MSI release preparation](docs/MSI-RELEASE.md) for the evidence and checklist.
 
