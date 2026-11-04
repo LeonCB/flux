@@ -10,7 +10,7 @@ const MAX_FRAME_TIME: f32 = 1.0 / 10.0;
 
 /// Optional GPU capabilities discovered at device-creation time.
 ///
-/// Luma relies on a small handful of optional wgpu features for its fast paths
+/// Flux relies on a small handful of optional wgpu features for its fast paths
 /// and falls back to widely-supported alternatives when they aren't available.
 /// The host (desktop or web) is responsible for probing the adapter and
 /// constructing this struct.
@@ -22,7 +22,7 @@ pub struct BackendCaps {
     pub float32_filterable: bool,
 }
 
-pub struct Luma {
+pub struct Flux {
     settings: Arc<Settings>,
     logical_size: wgpu::Extent3d,
     physical_size: wgpu::Extent3d,
@@ -44,7 +44,7 @@ pub struct Luma {
     fluid_frame_time: f32,
 }
 
-impl Luma {
+impl Flux {
     pub fn update(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, settings: &Arc<Settings>) {
         let fluid_size_changed = self.settings.fluid_size != settings.fluid_size;
         let scale_changed = self.settings.overall_scale() != settings.overall_scale();
@@ -107,12 +107,12 @@ impl Luma {
         physical_height: u32,
         caps: BackendCaps,
         settings: &Arc<Settings>,
-    ) -> Result<Luma, String> {
+    ) -> Result<Flux, String> {
         if logical_width == 0 || logical_height == 0 || physical_width == 0 || physical_height == 0
         {
-            return Err("Luma requires nonzero logical and backing dimensions".into());
+            return Err("Flux requires nonzero logical and backing dimensions".into());
         }
-        log::info!("✨ Initialising Luma");
+        log::info!("✨ Initialising Flux");
 
         rng::init_from_seed(&settings.seed);
 
@@ -169,7 +169,7 @@ impl Luma {
             ],
         );
 
-        Ok(Luma {
+        Ok(Flux {
             settings: Arc::clone(settings),
             logical_size,
             physical_size,
@@ -296,7 +296,7 @@ impl Luma {
                 .update_buffers(device, encoder, self.settings.fluid_timestep);
 
             let mut cpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-                label: Some("luma::compute"),
+                label: Some("flux::compute"),
                 timestamp_writes: None,
             });
 
@@ -326,7 +326,7 @@ impl Luma {
                 .tick_line_uniforms(device, queue, timestep, self.elapsed_time);
 
             let mut cpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-                label: Some("luma::place_lines"),
+                label: Some("flux::place_lines"),
                 timestamp_writes: None,
             });
 
@@ -347,7 +347,7 @@ impl Luma {
 
         {
             let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label: Some("luma::render"),
+                label: Some("flux::render"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                     view,
                     resolve_target: None,

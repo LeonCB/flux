@@ -21,14 +21,14 @@ use winit::{
 #[cfg(target_os = "macos")]
 use winit::platform::macos::WindowAttributesExtMacOS;
 
-use luma::{display_size::DisplaySize, Luma, Settings};
+use flux::{display_size::DisplaySize, Flux, Settings};
 
 struct App {
     runtime: tokio::runtime::Runtime,
     tx: mpsc::Sender<Msg>,
     rx: mpsc::Receiver<Msg>,
 
-    luma: Luma,
+    flux: Flux,
     _settings: Arc<Settings>,
 
     color_image: Arc<Mutex<Option<RgbaImage>>>,
@@ -44,7 +44,7 @@ impl App {
             match msg {
                 Msg::DecodedImage => {
                     if let Some(image) = &*self.color_image.lock().unwrap() {
-                        self.luma.sample_colors_from_image(device, queue, image);
+                        self.flux.sample_colors_from_image(device, queue, image);
                     }
                 }
             }
@@ -55,7 +55,7 @@ impl App {
         let tx = self.tx.clone();
         let color_image = Arc::clone(&self.color_image);
         self.runtime.spawn(async move {
-            match luma::render::color::Context::decode_color_texture(&encoded_bytes) {
+            match flux::render::color::Context::decode_color_texture(&encoded_bytes) {
                 Ok(image) => {
                     {
                         let mut boop = color_image.lock().unwrap();
@@ -83,7 +83,7 @@ struct GpuState {
 }
 
 impl GpuState {
-    fn resize_before_draw(&mut self, window: &Window, luma: &mut Luma) {
+    fn resize_before_draw(&mut self, window: &Window, flux: &mut Flux) {
         if !self.resize_pending {
             return;
         }
@@ -109,7 +109,7 @@ impl GpuState {
                 self.config.height = size.physical_height;
                 self.window_surface.configure(&self.device, &self.config);
             }
-            luma.resize(
+            flux.resize(
                 &self.device,
                 &self.command_queue,
                 size.logical_width,
@@ -122,7 +122,7 @@ impl GpuState {
     }
 }
 
-struct LumaApp {
+struct FluxApp {
     mode: Mode,
     monitor: Option<MonitorHandle>,
     preferences: preferences::Preferences,
@@ -140,7 +140,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut logger =
         env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"));
     if let Ok(path) = std::env::current_exe() {
-        if let Ok(file) = std::fs::File::create(path.with_file_name("Luma.log")) {
+        if let Ok(file) = std::fs::File::create(path.with_file_name("Flux.log")) {
             logger.target(env_logger::Target::Pipe(Box::new(file)));
         }
     }
@@ -174,18 +174,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let event_loop = EventLoop::new().unwrap();
     event_loop.set_control_flow(winit::event_loop::ControlFlow::Poll);
-    let mut luma_app = MultiMonitorApp {
+    let mut flux_app = MultiMonitorApp {
         mode,
         displays: Vec::new(),
     };
-    event_loop.run_app(&mut luma_app)?;
+    event_loop.run_app(&mut flux_app)?;
     Ok(())
 }
 
 // One event loop owns every display, so any exit request closes the entire saver.
 struct MultiMonitorApp {
     mode: Mode,
-    displays: Vec<LumaApp>,
+    displays: Vec<FluxApp>,
 }
 
 impl ApplicationHandler for MultiMonitorApp {
@@ -225,7 +225,7 @@ impl ApplicationHandler for MultiMonitorApp {
                     monitor.scale_factor()
                 );
             }
-            let mut display = LumaApp {
+            let mut display = FluxApp {
                 mode: self.mode,
                 monitor,
                 preferences: display_preferences,
@@ -292,7 +292,7 @@ impl ApplicationHandler for MultiMonitorApp {
         }
     }
 }
-impl ApplicationHandler for LumaApp {
+impl ApplicationHandler for FluxApp {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         if self.window.is_some() {
             return;
@@ -302,7 +302,7 @@ impl ApplicationHandler for LumaApp {
 
         #[cfg(target_os = "macos")]
         let window_attributes = Window::default_attributes()
-            .with_title("Luma")
+            .with_title("Flux")
             .with_visible(false)
             .with_decorations(true)
             .with_resizable(true)
@@ -313,7 +313,7 @@ impl ApplicationHandler for LumaApp {
 
         #[cfg(not(target_os = "macos"))]
         let window_attributes = Window::default_attributes()
-            .with_title("Luma")
+            .with_title("Flux")
             .with_visible(false)
             .with_decorations(true)
             .with_resizable(true)
@@ -372,7 +372,7 @@ impl ApplicationHandler for LumaApp {
 
         let limits = wgpu::Limits::default().using_resolution(adapter.limits());
 
-        let caps = luma::BackendCaps {
+        let caps = flux::BackendCaps {
             float32_filterable: adapter
                 .features()
                 .contains(wgpu::Features::FLOAT32_FILTERABLE),
@@ -443,7 +443,7 @@ impl ApplicationHandler for LumaApp {
             );
         }
         let settings = Arc::new(self.preferences.renderer_settings());
-        let luma = Luma::new(
+        let flux = Flux::new(
             &device,
             &command_queue,
             surface_output.format,
@@ -470,7 +470,7 @@ impl ApplicationHandler for LumaApp {
             runtime,
             tx,
             rx,
-            luma,
+            flux,
             _settings: settings,
             color_image: Arc::new(Mutex::new(None)),
         });
@@ -571,7 +571,7 @@ impl ApplicationHandler for LumaApp {
                 window.request_redraw();
             }
             WindowEvent::RedrawRequested => {
-                gpu.resize_before_draw(window, &mut app.luma);
+                gpu.resize_before_draw(window, &mut app.flux);
                 if gpu.size.is_none() {
                     return;
                 }
@@ -596,10 +596,10 @@ impl ApplicationHandler for LumaApp {
                 let mut encoder =
                     gpu.device
                         .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                            label: Some("luma:render"),
+                            label: Some("flux:render"),
                         });
 
-                app.luma.animate(
+                app.flux.animate(
                     &gpu.device,
                     &gpu.command_queue,
                     &mut encoder,
@@ -651,7 +651,7 @@ struct SurfaceOutput {
 }
 
 fn get_preferred_surface_output(capabilities: &wgpu::SurfaceCapabilities) -> Option<SurfaceOutput> {
-    // Luma's existing output values are sRGB-encoded. Prefer an encoded
+    // Flux's existing output values are sRGB-encoded. Prefer an encoded
     // extended-sRGB surface where available (Metal and some Vulkan drivers),
     // preserving the current appearance and values above SDR white.
     let encoded_hdr = SurfaceOutput {
@@ -663,7 +663,7 @@ fn get_preferred_surface_output(capabilities: &wgpu::SurfaceCapabilities) -> Opt
     }
 
     // Linear scRGB and PQ/HLG need an explicit output conversion pass. Until
-    // Luma has one, using those spaces would alter the existing colors.
+    // Flux has one, using those spaces would alter the existing colors.
     // Preserve the existing SDR output convention: non-sRGB formats contain an
     // sRGB-encoded signal, while *Srgb formats perform the encoding on store.
     // Every candidate is paired with an explicitly advertised color space.

@@ -7,16 +7,16 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
-$folder = Join-Path $env:LOCALAPPDATA 'Luma\MSI'
+$folder = Join-Path $env:LOCALAPPDATA 'Flux\MSI'
 if (Test-Path $folder) { throw 'Remove the existing production MSI before running the tests.' }
 $logs = Join-Path $repo ('target\msi-release-tests-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
 New-Item -ItemType Directory -Path $logs -Force | Out-Null
 $noLegacy = Join-Path $logs 'no-legacy-installation'
 $legacy = Join-Path $logs 'legacy'
 $payload = (Resolve-Path -LiteralPath $PayloadDirectory).Path
-$expectedHash = (Get-FileHash -LiteralPath (Join-Path $payload 'Luma.scr')).Hash.ToLowerInvariant()
-$binary = Join-Path $folder 'Luma.scr'
-$protectedFiles = @((Join-Path $env:LOCALAPPDATA 'Luma\settings.json'), (Join-Path $env:LOCALAPPDATA 'Luma\Screensaver\Luma.scr'))
+$expectedHash = (Get-FileHash -LiteralPath (Join-Path $payload 'Flux.scr')).Hash.ToLowerInvariant()
+$binary = Join-Path $folder 'Flux.scr'
+$protectedFiles = @((Join-Path $env:LOCALAPPDATA 'Flux\settings.json'), (Join-Path $env:LOCALAPPDATA 'Flux\Screensaver\Flux.scr'))
 $before = @($protectedFiles | ForEach-Object { if (Test-Path $_) { (Get-FileHash $_).Hash } else { 'absent' } })
 $script:step = 0
 $baseline = $null
@@ -32,14 +32,14 @@ function Run-Msi($Package, $Operation, [string[]]$Options = @(), $Expected = 0, 
     $script:step++
     $log = Join-Path $logs "$script:step.log"
     $report = Join-Path $logs "$script:step.json"
-    $arguments = "$Operation `"$((Resolve-Path $Package).Path)`" /qn /norestart /L*v `"$log`" LUMA_REPORT=`"$report`" LEGACYFOLDER=`"$LegacyFolder`" " + ($Options -join ' ')
+    $arguments = "$Operation `"$((Resolve-Path $Package).Path)`" /qn /norestart /L*v `"$log`" FLUX_REPORT=`"$report`" LEGACYFOLDER=`"$LegacyFolder`" " + ($Options -join ' ')
     $process = Start-Process msiexec.exe -ArgumentList $arguments -WindowStyle Hidden -PassThru
     if (!$process.WaitForExit(120000)) { throw "MSI timed out: $log" }
     if ($process.ExitCode -ne $Expected) { throw "Expected exit $Expected, got $($process.ExitCode): $log" }
-    if ($Options -contains 'LUMA_TEST_FAIL=1') {
+    if ($Options -contains 'FLUX_TEST_FAIL=1') {
         if (!(Select-String -LiteralPath $log -Pattern 'CustomAction Fail(Removal)?ForTest returned actual error code 1603' -Quiet)) { throw "The injected failure was not reached: $log" }
     } elseif ($Expected -eq 1603) {
-        if (!(Select-String -LiteralPath $log -Pattern 'A newer Luma is already installed.' -SimpleMatch -Quiet)) { throw "Downgrade failed for an unexpected reason: $log" }
+        if (!(Select-String -LiteralPath $log -Pattern 'A newer Flux is already installed.' -SimpleMatch -Quiet)) { throw "Downgrade failed for an unexpected reason: $log" }
         return $null
     }
     Get-Content -LiteralPath $report -Raw | ConvertFrom-Json
@@ -54,12 +54,12 @@ try {
     $r = Run-Msi $MsiPath '/i'
     $baseline = $r.original
     $initialOriginal = $baseline
-    $oldPrototypeBinary = Join-Path $env:LOCALAPPDATA 'Luma\MSI-Prototype\Luma.scr'
+    $oldPrototypeBinary = Join-Path $env:LOCALAPPDATA 'Flux\MSI-Prototype\Flux.scr'
     if ($baseline -eq (Encode-Selection $oldPrototypeBinary) -and !(Test-Path $oldPrototypeBinary) -and (Test-Path $protectedFiles[1])) {
         $baseline = Encode-Selection $protectedFiles[1]
-        Write-Output 'Cleanup will replace a leftover, missing prototype selection with the existing production Luma copy.'
+        Write-Output 'Cleanup will replace a leftover, missing prototype selection with the existing production Flux copy.'
     }
-    Assert-Value $r.selection (Encode-Selection $binary) 'Install did not select Luma in the Windows Installer user context.'
+    Assert-Value $r.selection (Encode-Selection $binary) 'Install did not select Flux in the Windows Installer user context.'
     if ((Get-FileHash $binary).Hash.ToLowerInvariant() -ne $expectedHash) { throw 'The payload differs from the published release.' }
     $backup = $r.previous
     $r = Run-Msi $MsiPath '/fa'
@@ -70,14 +70,14 @@ try {
     if (Test-Path $binary) { throw 'Uninstall left its payload behind.' }
     Write-Output 'PASS: activation, exact release payload, repair and previous-selection restoration.'
 
-    $other = Join-Path $payload 'Luma.scr'
+    $other = Join-Path $payload 'Flux.scr'
     $otherEncoded = Encode-Selection $other
-    $r = Run-Msi $MsiPath '/i' @('LUMA_TEST_FAIL=1', "LUMA_TEST_SELECTION=$otherEncoded") 1603
+    $r = Run-Msi $MsiPath '/i' @('FLUX_TEST_FAIL=1', "FLUX_TEST_SELECTION=$otherEncoded") 1603
     Assert-Value $r.selection $otherEncoded 'Install rollback did not restore the selection.'
     Assert-Value $r.previous '-' 'Install rollback left metadata behind.'
     if (Test-Path $binary) { throw 'Install rollback left its payload behind.' }
     $script:installed = $MsiPath
-    $r = Run-Msi $MsiPath '/i' @('LUMA_TEST_SELECTION=-')
+    $r = Run-Msi $MsiPath '/i' @('FLUX_TEST_SELECTION=-')
     $r = Run-Msi $MsiPath '/x'
     $script:installed = $null
     Assert-Value $r.selection '-' 'Uninstall did not restore an originally absent selection.'
@@ -86,7 +86,7 @@ try {
     $script:installed = $MsiPath
     $r = Run-Msi $MsiPath '/i'
     $backup = $r.previous
-    $r = Run-Msi $MsiPath '/fa' @("LUMA_TEST_SELECTION=$otherEncoded")
+    $r = Run-Msi $MsiPath '/fa' @("FLUX_TEST_SELECTION=$otherEncoded")
     Assert-Value $r.selection $otherEncoded 'Repair overwrote a newer choice.'
     $r = Run-Msi $UpgradeMsiPath '/i'
     $script:installed = $UpgradeMsiPath
@@ -99,21 +99,21 @@ try {
     Write-Output 'PASS: major upgrade, downgrade prevention and preservation of a newer selection.'
 
     New-Item -ItemType Directory -Path $legacy -Force | Out-Null
-    Copy-Item (Join-Path $payload 'Luma.scr') (Join-Path $legacy 'Luma.scr')
+    Copy-Item (Join-Path $payload 'Flux.scr') (Join-Path $legacy 'Flux.scr')
     $manifestJson = @{schema=1; previousScreenSaver=$other} | ConvertTo-Json
     [IO.File]::WriteAllText((Join-Path $legacy 'installation.json'), $manifestJson, (New-Object Text.UTF8Encoding($false)))
     Set-Content (Join-Path $legacy 'keep.txt') 'User-owned file; migration must retain it.'
-    $oldSelected = Encode-Selection (Join-Path $legacy 'Luma.scr')
-    $r = Run-Msi $MsiPath '/i' @('LUMA_TEST_FAIL=1', "LUMA_TEST_SELECTION=$oldSelected") 1603 $legacy
+    $oldSelected = Encode-Selection (Join-Path $legacy 'Flux.scr')
+    $r = Run-Msi $MsiPath '/i' @('FLUX_TEST_FAIL=1', "FLUX_TEST_SELECTION=$oldSelected") 1603 $legacy
     Assert-Value $r.selection $oldSelected 'Failed migration did not restore the old saver.'
-    if (!(Test-Path (Join-Path $legacy 'Luma.scr'))) { throw 'Failed migration removed the legacy payload.' }
+    if (!(Test-Path (Join-Path $legacy 'Flux.scr'))) { throw 'Failed migration removed the legacy payload.' }
     $script:installed = $MsiPath
     $r = Run-Msi $MsiPath '/i' @() 0 $legacy
     Assert-Value $r.selection (Encode-Selection $binary) 'ZIP migration did not activate the new copy.'
-    if ((Test-Path (Join-Path $legacy 'Luma.scr')) -or !(Test-Path (Join-Path $legacy 'keep.txt'))) { throw 'ZIP migration file ownership is incorrect.' }
+    if ((Test-Path (Join-Path $legacy 'Flux.scr')) -or !(Test-Path (Join-Path $legacy 'keep.txt'))) { throw 'ZIP migration file ownership is incorrect.' }
     $r = Run-Msi $MsiPath '/x'
     $script:installed = $null
-    Assert-Value $r.selection $otherEncoded 'ZIP migration lost the pre-Luma selection.'
+    Assert-Value $r.selection $otherEncoded 'ZIP migration lost the pre-Flux selection.'
     Write-Output 'PASS: ZIP migration, failed-migration rollback and preservation of unknown files.'
 
     if ($LegacySetupPath) {
@@ -123,13 +123,13 @@ try {
         $legacyManifest = Get-Content (Join-Path $legacy 'installation.json') -Raw | ConvertFrom-Json
         $expectedOriginal = Encode-Selection $legacyManifest.previousScreenSaver
         $script:installed = $MsiPath
-        $r = Run-Msi $MsiPath '/i' @("LUMA_TEST_SELECTION=$oldSelected") 0 $legacy
+        $r = Run-Msi $MsiPath '/i' @("FLUX_TEST_SELECTION=$oldSelected") 0 $legacy
         Assert-Value $r.selection (Encode-Selection $binary) 'Inno migration did not activate the new copy.'
         if (Test-Path $key) { throw 'Inno Setup registration survived migration.' }
-        if (Test-Path (Join-Path $legacy 'Luma.scr')) { throw 'The registered uninstaller did not remove the old payload.' }
+        if (Test-Path (Join-Path $legacy 'Flux.scr')) { throw 'The registered uninstaller did not remove the old payload.' }
         $r = Run-Msi $MsiPath '/x'
         $script:installed = $null
-        Assert-Value $r.selection $expectedOriginal 'Inno migration lost the pre-Luma selection.'
+        Assert-Value $r.selection $expectedOriginal 'Inno migration lost the pre-Flux selection.'
         Write-Output 'PASS: migration from the actual published Inno Setup installer.'
     }
 
@@ -137,7 +137,7 @@ try {
     $script:installed = $MsiPath
     $r = Run-Msi $MsiPath '/i'
     $backup = $r.previous
-    $r = Run-Msi $MsiPath '/x' @('LUMA_TEST_FAIL=1') 1603
+    $r = Run-Msi $MsiPath '/x' @('FLUX_TEST_FAIL=1') 1603
     Assert-Value $r.selection (Encode-Selection $binary) 'Uninstall rollback did not restore the selected saver.'
     Assert-Value $r.previous $backup 'Uninstall rollback did not restore metadata.'
     if (!(Test-Path $binary)) { throw 'Uninstall rollback did not restore the payload.' }
@@ -155,10 +155,10 @@ try {
     }
     if ($null -ne $baseline) {
         # Run restoration inside the native MSI context, not a potentially different registry view.
-        if (!$script:installed) { $null = Run-Msi $MsiPath '/i' @("LUMA_TEST_RESTORE=$baseline"); $script:installed = $MsiPath }
+        if (!$script:installed) { $null = Run-Msi $MsiPath '/i' @("FLUX_TEST_RESTORE=$baseline"); $script:installed = $MsiPath }
         # Restore MSI component ownership too if an injected failure broke engine rollback.
         $null = Run-Msi $script:installed '/fa'
-        $r = Run-Msi $script:installed '/x' @("LUMA_TEST_RESTORE=$baseline")
+        $r = Run-Msi $script:installed '/x' @("FLUX_TEST_RESTORE=$baseline")
         Assert-Value $r.postRestore $baseline 'Native test cleanup did not restore the original selection.'
     }
 }

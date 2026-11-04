@@ -7,7 +7,7 @@ pub struct Clock {
 impl Clock {
     pub fn new(device: &wgpu::Device, format: wgpu::TextureFormat) -> Self {
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("Luma clock"),
+            label: Some("Flux clock"),
             source: wgpu::ShaderSource::Wgsl(include_str!("clock.wgsl").into()),
         });
         let uniform = device.create_buffer(&wgpu::BufferDescriptor {

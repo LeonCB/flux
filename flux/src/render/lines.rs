@@ -420,7 +420,7 @@ impl Context {
         });
         {
             let mut cpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-                label: Some("luma::resample_lines"),
+                label: Some("flux::resample_lines"),
                 timestamp_writes: None,
             });
             cpass.set_pipeline(&self.resample_pipeline);

@@ -3,7 +3,7 @@ $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
-$settingsPath = $env:LUMA_SETTINGS_PATH
+$settingsPath = $env:FLUX_SETTINGS_PATH
 if ([string]::IsNullOrWhiteSpace($settingsPath)) { throw 'The settings path is unavailable.' }
 $defaults = @{ palette = 'Original'; speed = 100; size = 100; quality = 'Balanced'; clockEnabled = $false; clockMonitor = 'Primary' }
 $values = $defaults.Clone()
@@ -24,7 +24,7 @@ if (Test-Path -LiteralPath $settingsPath) {
     }
 }
 $form = New-Object System.Windows.Forms.Form
-$form.Text = 'Luma settings'
+$form.Text = 'Flux settings'
 $form.StartPosition = 'CenterScreen'
 $form.FormBorderStyle = 'FixedDialog'
 $form.MaximizeBox = $false
@@ -33,7 +33,7 @@ $form.Font = New-Object System.Drawing.Font('Segoe UI', 10)
 $form.AutoScaleMode = 'Dpi'
 $form.ClientSize = New-Object System.Drawing.Size(460, 462)
 $heading = New-Object System.Windows.Forms.Label
-$heading.Text = 'Make Luma your own'
+$heading.Text = 'Make Flux your own'
 $heading.Font = New-Object System.Drawing.Font('Segoe UI', 15)
 $heading.SetBounds(24, 18, 410, 35)
 $form.Controls.Add($heading)
@@ -84,7 +84,7 @@ function Set-Choices($prefs) {
 }
 Set-Choices $values
 $note = New-Object System.Windows.Forms.Label
-$note.Text = if ($warning) { $warning } else { 'Changes apply the next time Luma or its Windows preview starts. Higher quality uses more GPU resources.' }
+$note.Text = if ($warning) { $warning } else { 'Changes apply the next time Flux or its Windows preview starts. Higher quality uses more GPU resources.' }
 $note.SetBounds(24, 328, 410, 60)
 $form.Controls.Add($note)
 $restore = New-Object System.Windows.Forms.Button
@@ -128,7 +128,7 @@ function Save-Preferences {
 }
 $save.Add_Click({
     try { Save-Preferences; $form.Close() }
-    catch { [void][System.Windows.Forms.MessageBox]::Show($form, $_.Exception.Message, 'Unable to save Luma settings', 'OK', 'Error') }
+    catch { [void][System.Windows.Forms.MessageBox]::Show($form, $_.Exception.Message, 'Unable to save Flux settings', 'OK', 'Error') }
 })
 try {
     if ($TestMode) {

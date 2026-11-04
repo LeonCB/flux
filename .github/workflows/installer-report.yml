@@ -35,10 +35,10 @@ jobs:
           $directory = Join-Path $PWD 'target/installer-review'
           gh run download $env:REVIEW_RUN --repo $env:RELEASE_REPOSITORY --name installer-remediation-review --dir $directory
           if ($LASTEXITCODE -ne 0) { throw 'Could not download investigation artifacts.' }
-          gh release download v0.1.0 --repo $env:RELEASE_REPOSITORY --pattern Luma-0.1.0-windows-x64.zip --dir $directory
+          gh release download v0.1.0 --repo $env:RELEASE_REPOSITORY --pattern Flux-0.1.0-windows-x64.zip --dir $directory
           if ($LASTEXITCODE -ne 0) { throw 'Could not download original ZIP.' }
           $notes = Get-Content "$directory/virustotal.md" -Raw
-          $scan = ./scripts/submit-virustotal.ps1 -Tag v0.1.0 -Directory $directory -ExistingNotes $notes -ReportOnly -AdditionalFiles Luma.scr,luma-install-helper.exe
+          $scan = ./scripts/submit-virustotal.ps1 -Tag v0.1.0 -Directory $directory -ExistingNotes $notes -ReportOnly -AdditionalFiles Flux.scr,flux-install-helper.exe
           Get-Content $scan.ReportPath | Add-Content $env:GITHUB_STEP_SUMMARY
           if ($scan.HasErrors) { throw 'Some reports are unavailable; inspect diagnostics.' }
       - uses: actions/upload-artifact@v7

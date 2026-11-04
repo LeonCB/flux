@@ -6,15 +6,15 @@ param(
     [string] $ExistingNotes = '',
     [switch] $ReportOnly,
     [switch] $ReuseRecordedAnalyses,
-    [ValidateSet('Luma.scr', 'luma-install-helper.exe')][string[]] $AdditionalFiles = @()
+    [ValidateSet('Flux.scr', 'flux-install-helper.exe')][string[]] $AdditionalFiles = @()
 )
 . "$PSScriptRoot/virustotal-common.ps1"
 if ([string]::IsNullOrWhiteSpace($env:VT_API_KEY)) { throw 'VT_API_KEY is not configured.' }
-$assets = @(Get-LumaScanAssets $Directory $Tag $AdditionalFiles)
+$assets = @(Get-FluxScanAssets $Directory $Tag $AdditionalFiles)
 $script:vtLastRequest = [DateTime]::MinValue
 $notes = [Collections.Generic.List[string]]::new()
 $results = [Collections.Generic.List[object]]::new()
-$notes.Add("<!-- luma-virustotal:start -->`n## VirusTotal`n")
+$notes.Add("<!-- flux-virustotal:start -->`n## VirusTotal`n")
 $notes.Add('These release files are public samples. Reports are informational: false positives are possible, and zero detections do not guarantee safety. This does not replace code signing or remove SmartScreen warnings.')
 $notes.Add("`nLast checked: $([DateTime]::UtcNow.ToString('yyyy-MM-dd HH:mm')) UTC.`n")
 $hasErrors = $false
@@ -87,7 +87,7 @@ foreach ($asset in $assets) {
     }
     $results.Add($result)
 }
-$notes.Add('<!-- luma-virustotal:end -->')
+$notes.Add('<!-- flux-virustotal:end -->')
 $notes | Set-Content -LiteralPath (Join-Path $Directory 'virustotal.md') -Encoding utf8NoBOM
 ConvertTo-Json -InputObject @($results.ToArray()) -Depth 8 | Set-Content -LiteralPath (Join-Path $Directory 'virustotal-results.json') -Encoding utf8NoBOM
 [pscustomobject]@{ HasErrors = $hasErrors; ReportPath = (Join-Path $Directory 'virustotal.md') }

@@ -1,4 +1,4 @@
-use luma::settings::{ColorMode, ColorPreset};
+use flux::settings::{ColorMode, ColorPreset};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -40,8 +40,8 @@ impl Preferences {
         Ok(prefs)
     }
 
-    pub fn renderer_settings(&self) -> luma::Settings {
-        luma::Settings {
+    pub fn renderer_settings(&self) -> flux::Settings {
+        flux::Settings {
             color_mode: ColorMode::Preset(self.palette),
             overall_scale: self.size as f32 / 100.0,
             fluid_size: match self.quality.as_str() {
@@ -56,7 +56,7 @@ impl Preferences {
 
 pub fn path() -> Result<PathBuf, String> {
     std::env::var_os("LOCALAPPDATA")
-        .map(|path| PathBuf::from(path).join("Luma").join("settings.json"))
+        .map(|path| PathBuf::from(path).join("Flux").join("settings.json"))
         .ok_or_else(|| "The local application data folder is unavailable.".into())
 }
 
@@ -85,7 +85,7 @@ fn settings_command(script: &str, file: PathBuf) -> Result<std::process::Command
     let mut command = std::process::Command::new(powershell);
     command
         .args(["-NoProfile", "-STA", "-NonInteractive", "-Command", script])
-        .env("LUMA_SETTINGS_PATH", file)
+        .env("FLUX_SETTINGS_PATH", file)
         .creation_flags(0x08000000); // CREATE_NO_WINDOW: display only the settings form.
     Ok(command)
 }
@@ -116,7 +116,7 @@ mod tests {
     #[ignore = "opens a Windows Forms settings panel"]
     fn embedded_settings_form_saves_and_cancels_through_the_production_launcher() {
         let directory =
-            std::env::temp_dir().join(format!("luma-settings-test-{}", std::process::id()));
+            std::env::temp_dir().join(format!("flux-settings-test-{}", std::process::id()));
         let path = directory.join("settings.json");
         let script = include_str!("settings-form.ps1")
             .replace("param([switch]$TestMode)", "$TestMode = $true");
@@ -152,7 +152,7 @@ mod tests {
         );
         assert_eq!(
             prefs.renderer_settings().fluid_size,
-            luma::Settings::default().fluid_size
+            flux::Settings::default().fluid_size
         );
     }
     #[test]
@@ -183,6 +183,6 @@ mod tests {
         let settings = reloaded.renderer_settings();
         assert_eq!(settings.fluid_size, 256);
         assert_eq!(settings.overall_scale, 2.0);
-        assert_eq!(settings.line_width, luma::Settings::default().line_width);
+        assert_eq!(settings.line_width, flux::Settings::default().line_width);
     }
 }

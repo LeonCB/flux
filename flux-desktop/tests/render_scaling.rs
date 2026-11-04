@@ -1,6 +1,6 @@
 use std::sync::{mpsc, Arc};
 
-use luma::{BackendCaps, Luma, Settings};
+use flux::{BackendCaps, Flux, Settings};
 
 struct Renderer {
     device: wgpu::Device,
@@ -10,7 +10,7 @@ struct Renderer {
 #[test]
 #[ignore = "requires a GPU adapter"]
 fn scalar_debug_views_reveal_signed_changes() {
-    use luma::settings::Mode::{DebugDivergence, DebugPressure};
+    use flux::settings::Mode::{DebugDivergence, DebugPressure};
 
     let instance = wgpu::Instance::default();
     let adapter = pollster::block_on(instance.request_adapter(&Default::default())).unwrap();
@@ -20,7 +20,7 @@ fn scalar_debug_views_reveal_signed_changes() {
         seed: Some("scalar debug visibility".into()),
         ..Default::default()
     });
-    let mut luma = Luma::new(
+    let mut flux = Flux::new(
         &renderer.device,
         &renderer.queue,
         wgpu::TextureFormat::Rgba8Unorm,
@@ -36,26 +36,26 @@ fn scalar_debug_views_reveal_signed_changes() {
     .unwrap();
     for mode in [DebugPressure, DebugDivergence] {
         Arc::make_mut(&mut settings).mode = mode;
-        luma.update(&renderer.device, &renderer.queue, &settings);
+        flux.update(&renderer.device, &renderer.queue, &settings);
         assert!(renderer
-            .snapshot(&luma, 640, 400)
+            .snapshot(&flux, 640, 400)
             .chunks_exact(4)
             .all(|p| { p[0].abs_diff(128) <= 1 && p[0] == p[1] && p[1] == p[2] && p[3] == 255 }));
     }
     let mut timestamp = 0.0;
-    renderer.advance(&mut luma, &mut timestamp, 30);
+    renderer.advance(&mut flux, &mut timestamp, 30);
     for mode in [DebugPressure, DebugDivergence] {
         Arc::make_mut(&mut settings).mode = mode;
-        luma.update(&renderer.device, &renderer.queue, &settings);
-        let before = renderer.snapshot(&luma, 640, 400);
+        flux.update(&renderer.device, &renderer.queue, &settings);
+        let before = renderer.snapshot(&flux, 640, 400);
         assert!(before
             .chunks_exact(4)
             .any(|p| i16::from(p[0]) - i16::from(p[2]) > 30));
         assert!(before
             .chunks_exact(4)
             .any(|p| i16::from(p[2]) - i16::from(p[0]) > 30));
-        renderer.advance(&mut luma, &mut timestamp, 10);
-        assert_ne!(before, renderer.snapshot(&luma, 640, 400));
+        renderer.advance(&mut flux, &mut timestamp, 10);
+        assert_ne!(before, renderer.snapshot(&flux, 640, 400));
     }
 }
 
@@ -74,25 +74,25 @@ impl Renderer {
         Self { device, queue }
     }
 
-    fn advance(&self, luma: &mut Luma, timestamp: &mut f64, frames: u32) {
+    fn advance(&self, flux: &mut Flux, timestamp: &mut f64, frames: u32) {
         for _ in 0..frames {
             *timestamp += 1000.0 / 60.0;
             let mut encoder = self.device.create_command_encoder(&Default::default());
-            luma.compute(&self.device, &self.queue, &mut encoder, *timestamp);
+            flux.compute(&self.device, &self.queue, &mut encoder, *timestamp);
             self.queue.submit([encoder.finish()]);
         }
     }
 
-    fn snapshot(&self, luma: &Luma, width: u32, height: u32) -> Vec<u8> {
-        self.snapshot_viewport(luma, width, height, None)
+    fn snapshot(&self, flux: &Flux, width: u32, height: u32) -> Vec<u8> {
+        self.snapshot_viewport(flux, width, height, None)
     }
 
     fn snapshot_viewport(
         &self,
-        luma: &Luma,
+        flux: &Flux,
         width: u32,
         height: u32,
-        viewport: Option<luma::render::ScreenViewport>,
+        viewport: Option<flux::render::ScreenViewport>,
     ) -> Vec<u8> {
         let output = self.device.create_texture(&wgpu::TextureDescriptor {
             label: Some("scaling regression output"),
@@ -116,7 +116,7 @@ impl Renderer {
             mapped_at_creation: false,
         });
         let mut encoder = self.device.create_command_encoder(&Default::default());
-        luma.render(
+        flux.render(
             &self.device,
             &self.queue,
             &mut encoder,
@@ -155,7 +155,7 @@ impl Renderer {
 #[test]
 #[ignore = "requires a GPU adapter"]
 fn debug_textures_follow_line_zoom_and_viewport() {
-    use luma::settings::Mode::{DebugDivergence, DebugFluid, DebugNoise, DebugPressure};
+    use flux::settings::Mode::{DebugDivergence, DebugFluid, DebugNoise, DebugPressure};
 
     let instance = wgpu::Instance::default();
     let adapter = pollster::block_on(instance.request_adapter(&Default::default())).unwrap();
@@ -165,7 +165,7 @@ fn debug_textures_follow_line_zoom_and_viewport() {
         view_scale: 1.0,
         ..Default::default()
     });
-    let mut luma = Luma::new(
+    let mut flux = Flux::new(
         &renderer.device,
         &renderer.queue,
         wgpu::TextureFormat::Rgba8Unorm,
@@ -179,13 +179,13 @@ fn debug_textures_follow_line_zoom_and_viewport() {
         &settings,
     )
     .unwrap();
-    renderer.advance(&mut luma, &mut 0.0, 30);
+    renderer.advance(&mut flux, &mut 0.0, 30);
     for mode in [DebugNoise, DebugFluid, DebugPressure, DebugDivergence] {
         Arc::make_mut(&mut settings).mode = mode.clone();
         Arc::make_mut(&mut settings).view_scale = 1.0;
-        luma.update(&renderer.device, &renderer.queue, &settings);
+        flux.update(&renderer.device, &renderer.queue, &settings);
         // Power-of-two output keeps nearest samples away from texel boundaries.
-        let original = renderer.snapshot(&luma, 512, 512);
+        let original = renderer.snapshot(&flux, 512, 512);
         assert!(original.chunks_exact(4).any(|p| p != &original[..4]));
         let crop = |left: usize, top: usize| -> Vec<u8> {
             (top..top + 256)
@@ -197,18 +197,18 @@ fn debug_textures_follow_line_zoom_and_viewport() {
                 .collect()
         };
         Arc::make_mut(&mut settings).view_scale = 2.0;
-        luma.update(&renderer.device, &renderer.queue, &settings);
+        flux.update(&renderer.device, &renderer.queue, &settings);
         // Double zoom maps the central half of the field to the whole output.
         assert!(
-            renderer.snapshot(&luma, 256, 256) == crop(128, 128),
+            renderer.snapshot(&flux, 256, 256) == crop(128, 128),
             "zoom: {mode:?}"
         );
 
         Arc::make_mut(&mut settings).view_scale = 1.0;
-        luma.update(&renderer.device, &renderer.queue, &settings);
-        let viewport = luma::render::ScreenViewport::new(320, 200, 320, 200);
+        flux.update(&renderer.device, &renderer.queue, &settings);
+        let viewport = flux::render::ScreenViewport::new(320, 200, 320, 200);
         assert!(
-            renderer.snapshot_viewport(&luma, 256, 256, Some(viewport)) == crop(256, 256),
+            renderer.snapshot_viewport(&flux, 256, 256, Some(viewport)) == crop(256, 256),
             "viewport: {mode:?}",
         );
     }
@@ -237,7 +237,7 @@ fn frozen_lines_preserve_logical_size_across_span_and_backing_changes() {
             noise_multiplier: 3.0,
             ..Default::default()
         });
-        let mut luma = Luma::new(
+        let mut flux = Flux::new(
             &renderer.device,
             &renderer.queue,
             wgpu::TextureFormat::Rgba8Unorm,
@@ -252,8 +252,8 @@ fn frozen_lines_preserve_logical_size_across_span_and_backing_changes() {
         )
         .unwrap();
         let mut timestamp = 0.0;
-        renderer.advance(&mut luma, &mut timestamp, 90);
-        let original = renderer.snapshot(&luma, 640, 400);
+        renderer.advance(&mut flux, &mut timestamp, 90);
+        let original = renderer.snapshot(&flux, 640, 400);
         assert!(
             original
                 .chunks_exact(4)
@@ -261,8 +261,8 @@ fn frozen_lines_preserve_logical_size_across_span_and_backing_changes() {
             "comparison must contain visible lines"
         );
 
-        luma.resize(&renderer.device, &renderer.queue, 1280, 400, 1280, 400);
-        let wide = renderer.snapshot(&luma, 1280, 400);
+        flux.resize(&renderer.device, &renderer.queue, 1280, 400, 1280, 400);
+        let wide = renderer.snapshot(&flux, 1280, 400);
         let mut total_error = 0u64;
         let mut samples = 0u64;
         // Ignore the edges, where newly revealed lines can extend into view.
@@ -282,8 +282,8 @@ fn frozen_lines_preserve_logical_size_across_span_and_backing_changes() {
             "logical span changed frozen lines: mean byte error {error}"
         );
 
-        luma.resize(&renderer.device, &renderer.queue, 1280, 400, 2560, 800);
-        let retina = renderer.snapshot(&luma, 2560, 800);
+        flux.resize(&renderer.device, &renderer.queue, 1280, 400, 2560, 800);
+        let retina = renderer.snapshot(&flux, 2560, 800);
         let mut total_error = 0u64;
         for y in 0..400usize {
             for x in 0..1280usize {
@@ -306,15 +306,15 @@ fn frozen_lines_preserve_logical_size_across_span_and_backing_changes() {
         );
 
         // Zero-size callbacks preserve the last valid scene.
-        luma.resize(&renderer.device, &renderer.queue, 0, 0, 0, 0);
-        assert_eq!(renderer.snapshot(&luma, 2560, 800), retina);
+        flux.resize(&renderer.device, &renderer.queue, 0, 0, 0, 0);
+        assert_eq!(renderer.snapshot(&flux, 2560, 800), retina);
 
-        // Exercise settings changes through Luma, including world-scale updates.
+        // Exercise settings changes through Flux, including world-scale updates.
         Arc::make_mut(&mut settings).overall_scale = 1.5;
         Arc::make_mut(&mut settings).fluid_size = 256;
-        luma.update(&renderer.device, &renderer.queue, &settings);
-        renderer.advance(&mut luma, &mut timestamp, 4);
-        let resized = renderer.snapshot(&luma, 2560, 800);
+        flux.update(&renderer.device, &renderer.queue, &settings);
+        renderer.advance(&mut flux, &mut timestamp, 4);
+        let resized = renderer.snapshot(&flux, 2560, 800);
         assert!(resized.chunks_exact(4).any(|pixel| pixel[0] > 20));
     }
 }
@@ -335,7 +335,7 @@ fn batched_fluid_ticks_match_separately_submitted_ticks() {
         let renderer = Renderer::new(&adapter, filterable);
         let settings = Arc::new(Settings {
             seed: Some("batched fluid ticks".into()),
-            mode: luma::settings::Mode::DebugFluid,
+            mode: flux::settings::Mode::DebugFluid,
             // Binary-exact intervals avoid testing timestamp-rounding instead
             // of GPU command ordering. Six ticks fit inside the 100ms clamp.
             fluid_frame_rate: 64.0,
@@ -344,7 +344,7 @@ fn batched_fluid_ticks_match_separately_submitted_ticks() {
             ..Default::default()
         });
         let simulate = |batched: bool| {
-            let mut luma = Luma::new(
+            let mut flux = Flux::new(
                 &renderer.device,
                 &renderer.queue,
                 wgpu::TextureFormat::Rgba8Unorm,
@@ -367,10 +367,10 @@ fn batched_fluid_ticks_match_separately_submitted_ticks() {
             };
             for timestamp in timestamps {
                 let mut encoder = renderer.device.create_command_encoder(&Default::default());
-                luma.compute(&renderer.device, &renderer.queue, &mut encoder, timestamp);
+                flux.compute(&renderer.device, &renderer.queue, &mut encoder, timestamp);
                 renderer.queue.submit([encoder.finish()]);
             }
-            renderer.snapshot(&luma, 640, 400)
+            renderer.snapshot(&flux, 640, 400)
         };
         let separate = simulate(false);
         let batched = simulate(true);
@@ -397,10 +397,10 @@ fn freedom_palette_renders_visible_lines() {
     let renderer = Renderer::new(&adapter, false);
     let settings = Arc::new(Settings {
         seed: Some("freedom palette regression".into()),
-        color_mode: luma::settings::ColorMode::Preset(luma::settings::ColorPreset::Freedom),
+        color_mode: flux::settings::ColorMode::Preset(flux::settings::ColorPreset::Freedom),
         ..Default::default()
     });
-    let mut luma = Luma::new(
+    let mut flux = Flux::new(
         &renderer.device,
         &renderer.queue,
         wgpu::TextureFormat::Rgba8Unorm,
@@ -414,8 +414,8 @@ fn freedom_palette_renders_visible_lines() {
         &settings,
     )
     .unwrap();
-    renderer.advance(&mut luma, &mut 0.0, 90);
-    let pixels = renderer.snapshot(&luma, 640, 400);
+    renderer.advance(&mut flux, &mut 0.0, 90);
+    let pixels = renderer.snapshot(&flux, 640, 400);
     assert!(
         pixels
             .chunks_exact(4)

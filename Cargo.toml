@@ -1,15 +1,15 @@
 [workspace]
 resolver = "2"
-members = ["luma", "luma-desktop"]
+members = ["flux", "flux-desktop"]
 
 [workspace.package]
 version = "0.1.2"
-description = "Luma Windows screensaver, based on Flux"
+description = "Flux Windows screensaver, based on Luma and the original Flux by Sander Melnikov"
 edition = "2021"
 license = "MIT"
 license-file = "LICENSE"
 homepage = "https://luma.ksmvc.ch"
-repository = "https://github.com/Ken5998/luma"
+repository = "https://github.com/LeonCB/flux"
 authors = ["Kenan Kasumović", "Sander Melnikov <hey@sandydoo.me>"]
 
 [workspace.dependencies.wgpu]
@@ -23,7 +23,7 @@ version = "0.25"
 approx = "0.5.1"
 env_logger = "0.11"
 bytemuck = { version = "1.4", features = ["derive"] }
-luma = { path = "./luma" }
+flux = { path = "./flux" }
 futures = "0.3"
 getrandom = "0.4"
 glam = "0.32"

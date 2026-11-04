@@ -5,5 +5,5 @@ pub mod render;
 mod rng;
 pub mod settings;
 
-pub use engine::{BackendCaps, Luma};
+pub use engine::{BackendCaps, Flux};
 pub use settings::Settings;

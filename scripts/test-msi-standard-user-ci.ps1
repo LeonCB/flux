@@ -35,11 +35,11 @@ if ($Child) {
 # Account creation is confined to disposable GitHub-hosted runners.
 if ($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_ENVIRONMENT -ne 'github-hosted' -or !$elevated) { throw 'Run this harness only on an elevated, disposable GitHub-hosted Windows runner.' }
 if (!(Test-Path -LiteralPath (Join-Path $portable 'Probe.msi')) -or !(Test-Path -LiteralPath (Join-Path $portable 'test-msi-rollback-probe.ps1'))) { throw 'Portable rollback probe files are missing.' }
-$accountName = 'LumaMsi' + [guid]::NewGuid().ToString('N').Substring(0,10)
-$accountPassword = ConvertTo-SecureString ('Luma!' + [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32)) + 'a1') -AsPlainText -Force
+$accountName = 'FluxMsi' + [guid]::NewGuid().ToString('N').Substring(0,10)
+$accountPassword = ConvertTo-SecureString ('Flux!' + [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32)) + 'a1') -AsPlainText -Force
 $testUser = $null
 $process = $null
-$comparisonFolder = Join-Path $env:PUBLIC ('Luma-Msi-' + [guid]::NewGuid().ToString('N'))
+$comparisonFolder = Join-Path $env:PUBLIC ('Flux-Msi-' + [guid]::NewGuid().ToString('N'))
 $artifactFolder = Join-Path $portable 'standard-user-results'
 $installerPolicy = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Installer'
 $priorPolicyProperties = Get-ItemProperty -LiteralPath $installerPolicy -ErrorAction SilentlyContinue
@@ -50,7 +50,7 @@ try {
     if (!(Test-Path -LiteralPath $installerPolicy)) { $null = New-Item -Path $installerPolicy -Force }
     $null = New-ItemProperty -LiteralPath $installerPolicy -Name DisableMSI -Value 0 -PropertyType DWord -Force
     Write-Output 'Disposable CI runner: unmanaged MSI permitted; AlwaysInstallElevated remains disabled.'
-    $testUser = New-LocalUser -Name $accountName -Password $accountPassword -AccountNeverExpires -Description 'Temporary Luma MSI test account'
+    $testUser = New-LocalUser -Name $accountName -Password $accountPassword -AccountNeverExpires -Description 'Temporary Flux MSI test account'
     Add-LocalGroupMember -SID ([Security.Principal.SecurityIdentifier]::new('S-1-5-32-545')) -Member $testUser
     $null = New-Item -ItemType Directory -Path $comparisonFolder
     Copy-Item -LiteralPath (Join-Path $portable 'Probe.msi'),(Join-Path $portable 'test-msi-rollback-probe.ps1'),$PSCommandPath -Destination $comparisonFolder

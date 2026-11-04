@@ -66,13 +66,13 @@ try {
             $output.DrawImage($large, 0, 0, $size, $size)
             $bitmap.Save($stream, [Drawing.Imaging.ImageFormat]::Png)
             $images.Add($stream.ToArray())
-            if ($size -eq 256) { $bitmap.Save((Join-Path $repo 'target/luma-icon-preview.png'), [Drawing.Imaging.ImageFormat]::Png) }
+            if ($size -eq 256) { $bitmap.Save((Join-Path $repo 'target/flux-icon-preview.png'), [Drawing.Imaging.ImageFormat]::Png) }
         } finally {
             $stream.Dispose(); $pen.Dispose(); $brush.Dispose(); $fill.Dispose()
             $g.Dispose(); $output.Dispose(); $large.Dispose(); $bitmap.Dispose()
         }
     }
-    $destination = Join-Path $repo 'packaging/windows/Luma.ico'
+    $destination = Join-Path $repo 'packaging/windows/Flux.ico'
     $writer = New-Object IO.BinaryWriter([IO.File]::Create($destination))
     try {
         $writer.Write([uint16]0); $writer.Write([uint16]1); $writer.Write([uint16]$sizes.Count)

@@ -1321,7 +1321,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "luma"
+name = "flux"
 version = "0.1.2"
 dependencies = [
  "approx",
@@ -1342,7 +1342,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "luma-desktop"
+name = "flux-desktop"
 version = "0.1.2"
 dependencies = [
  "bytemuck",
@@ -1350,7 +1350,7 @@ dependencies = [
  "futures",
  "image",
  "log",
- "luma",
+ "flux",
  "pollster",
  "raw-window-handle",
  "serde",

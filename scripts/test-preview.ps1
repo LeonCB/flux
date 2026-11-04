@@ -6,7 +6,7 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type @"
 using System;
 using System.Runtime.InteropServices;
-public static class LumaPreviewNative {
+public static class FluxPreviewNative {
     [DllImport("user32.dll")] public static extern IntPtr GetWindow(IntPtr hwnd, uint command);
     [DllImport("user32.dll")] public static extern IntPtr GetParent(IntPtr hwnd);
     [DllImport("user32.dll")] public static extern bool GetClientRect(IntPtr hwnd, out Rect rect);
@@ -15,12 +15,12 @@ public static class LumaPreviewNative {
 "@
 $repo = Split-Path $PSScriptRoot -Parent
 $form = New-Object System.Windows.Forms.Form
-$form.Text = 'Luma preview test'
+$form.Text = 'Flux preview test'
 $form.ClientSize = New-Object System.Drawing.Size(480, 300)
 $process = $null
 try {
     $form.Show()
-    $info = [System.Diagnostics.ProcessStartInfo]::new((Join-Path $repo 'target\release\Luma.scr'), "/p $($form.Handle.ToInt64())")
+    $info = [System.Diagnostics.ProcessStartInfo]::new((Join-Path $repo 'target\release\Flux.scr'), "/p $($form.Handle.ToInt64())")
     $info.UseShellExecute = $false
     $info.EnvironmentVariables['RUST_LOG'] = 'info'
     $process = [System.Diagnostics.Process]::Start($info)
@@ -28,21 +28,21 @@ try {
     $child = [IntPtr]::Zero
     while ([DateTime]::UtcNow -lt $deadline) {
         [System.Windows.Forms.Application]::DoEvents()
-        $child = [LumaPreviewNative]::GetWindow($form.Handle, 5)
+        $child = [FluxPreviewNative]::GetWindow($form.Handle, 5)
         if ($child -ne [IntPtr]::Zero) { break }
         if ($process.HasExited) { throw 'Preview exited before creating a child window.' }
         Start-Sleep -Milliseconds 50
     }
     if ($child -eq [IntPtr]::Zero) { throw 'No preview child window was created.' }
-    if ([LumaPreviewNative]::GetParent($child) -ne $form.Handle) { throw 'Incorrect preview parent.' }
+    if ([FluxPreviewNative]::GetParent($child) -ne $form.Handle) { throw 'Incorrect preview parent.' }
     foreach ($size in @((New-Object System.Drawing.Size(480,300)), (New-Object System.Drawing.Size(640,360)))) {
         $form.ClientSize = $size
         $matched = $false
         $deadline = [DateTime]::UtcNow.AddSeconds(5)
         do {
             [System.Windows.Forms.Application]::DoEvents()
-            $rect = New-Object LumaPreviewNative+Rect
-            [void][LumaPreviewNative]::GetClientRect($child, [ref]$rect)
+            $rect = New-Object FluxPreviewNative+Rect
+            [void][FluxPreviewNative]::GetClientRect($child, [ref]$rect)
             $matched = ($rect.Right -eq $size.Width -and $rect.Bottom -eq $size.Height)
             Start-Sleep -Milliseconds 50
         } while (!$matched -and [DateTime]::UtcNow -lt $deadline)

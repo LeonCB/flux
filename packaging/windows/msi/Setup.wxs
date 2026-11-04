@@ -1,32 +1,32 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
-  <Package Name="Luma" Manufacturer="Kenan Kasumović" Version="$(var.Version)"
+  <Package Name="Flux" Manufacturer="Kenan Kasumović" Version="$(var.Version)"
            UpgradeCode="A51E59BE-C086-48C8-8BDA-B382C44316AE" Scope="perUser" Language="1033" Codepage="65001">
     <SummaryInformation Codepage="1250" />
-    <MajorUpgrade DowngradeErrorMessage="A newer Luma is already installed." Schedule="afterInstallExecute" />
+    <MajorUpgrade DowngradeErrorMessage="A newer Flux is already installed." Schedule="afterInstallExecute" />
     <MediaTemplate EmbedCab="yes" />
-    <Launch Condition="Installed OR VersionNT64" Message="Luma requires 64-bit Windows." />
-    <Launch Condition="Installed OR NOT RollbackDisabled" Message="Enable Windows Installer rollback before installing Luma." />
+    <Launch Condition="Installed OR VersionNT64" Message="Flux requires 64-bit Windows." />
+    <Launch Condition="Installed OR NOT RollbackDisabled" Message="Enable Windows Installer rollback before installing Flux." />
     <Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" />
     <Property Id="ARPURLINFOABOUT" Value="https://luma.ksmvc.ch" />
-    <Icon Id="LumaAppIcon.ico" SourceFile="$(var.Icon)" />
-    <Property Id="ARPPRODUCTICON" Value="LumaAppIcon.ico" />
+    <Icon Id="FluxAppIcon.ico" SourceFile="$(var.Icon)" />
+    <Property Id="ARPPRODUCTICON" Value="FluxAppIcon.ico" />
     <StandardDirectory Id="LocalAppDataFolder">
-      <Directory Id="LumaFolder" Name="Luma">
+      <Directory Id="FluxFolder" Name="Flux">
         <Component Id="ParentFolderCleanup" Guid="CB3FBA47-BF78-478E-86CB-1C39C7D22F59">
-          <RegistryValue Root="HKCU" Key="Software\Luma\Installer" Name="ParentFolder" Value="1" Type="integer" KeyPath="yes" />
+          <RegistryValue Root="HKCU" Key="Software\Flux\Installer" Name="ParentFolder" Value="1" Type="integer" KeyPath="yes" />
           <RemoveFolder Id="RemoveEmptyParent" On="uninstall" />
         </Component>
         <Directory Id="INSTALLFOLDER" Name="MSI">
           <Component Id="Payload" Guid="9CD7702A-C82C-4847-8E1C-648C390C5A74">
-            <File Id="ScreenSaver" Source="$(var.Payload)/Luma.scr" />
+            <File Id="ScreenSaver" Source="$(var.Payload)/Flux.scr" />
             <File Source="$(var.Payload)/LICENSE" />
-            <RegistryValue Root="HKCU" Key="Software\Luma\Installer" Name="InstallDirectory" Value="[INSTALLFOLDER]" Type="string" KeyPath="yes" />
+            <RegistryValue Root="HKCU" Key="Software\Flux\Installer" Name="InstallDirectory" Value="[INSTALLFOLDER]" Type="string" KeyPath="yes" />
             <RemoveFolder Id="RemoveInstallFolder" On="uninstall" />
           </Component>
         </Directory>
       </Directory>
     </StandardDirectory>
-    <Feature Id="Main" Title="Luma" Level="1"><ComponentRef Id="Payload" /><ComponentRef Id="ParentFolderCleanup" /></Feature>
+    <Feature Id="Main" Title="Flux" Level="1"><ComponentRef Id="Payload" /><ComponentRef Id="ParentFolderCleanup" /></Feature>
     <ui:WixUI Id="WixUI_Minimal" />
     <WixVariable Id="WixUILicenseRtf" Value="$(var.LicenseRtf)" />
     <Property Id="LEGACYFOLDER" Secure="yes" />
@@ -36,7 +36,7 @@
     <Property Id="LEGACY_UNINSTALL" Secure="yes" Hidden="yes">
       <RegistrySearch Id="LegacyUninstallSearch" Root="HKCU" Key="Software\Microsoft\Windows\CurrentVersion\Uninstall\{AE5327E7-474B-47B6-BF01-2D5352A418AF}_is1" Name="UninstallString" Type="raw" Bitness="always64" />
     </Property>
-    <SetProperty Id="LEGACYFOLDER" Value="[LocalAppDataFolder]Luma\Screensaver" After="CostFinalize" Sequence="execute" Condition="NOT LEGACYFOLDER" />
+    <SetProperty Id="LEGACYFOLDER" Value="[LocalAppDataFolder]Flux\Screensaver" After="CostFinalize" Sequence="execute" Condition="NOT LEGACYFOLDER" />
     <Binary Id="NativeActions" SourceFile="$(var.Actions)" />
     <CustomAction Id="PrepareSelection" BinaryRef="NativeActions" DllEntry="Prepare" Execute="immediate" Return="check" />
     <CustomAction Id="RollbackSelection" BinaryRef="NativeActions" DllEntry="Rollback" Execute="rollback" Impersonate="yes" Return="check" />
@@ -44,17 +44,17 @@
     <CustomAction Id="ChangeRemoval" BinaryRef="NativeActions" DllEntry="Change" Execute="deferred" Impersonate="yes" Return="check" />
     <CustomAction Id="CommitLegacy" HideTarget="yes" BinaryRef="NativeActions" DllEntry="CommitLegacy" Execute="commit" Impersonate="yes" Return="ignore" />
     <?if $(var.TestHooks) = 1 ?>
-    <Property Id="LUMA_TEST_FAIL" Secure="yes" />
-    <Property Id="LUMA_REPORT" Secure="yes" />
-    <Property Id="LUMA_TEST_SELECTION" Secure="yes" />
-    <Property Id="LUMA_TEST_RESTORE" Secure="yes" />
+    <Property Id="FLUX_TEST_FAIL" Secure="yes" />
+    <Property Id="FLUX_REPORT" Secure="yes" />
+    <Property Id="FLUX_TEST_SELECTION" Secure="yes" />
+    <Property Id="FLUX_TEST_RESTORE" Secure="yes" />
     <CustomAction Id="TestSeed" BinaryRef="NativeActions" DllEntry="TestSeed" Execute="immediate" Return="check" />
     <CustomAction Id="TestVerify" BinaryRef="NativeActions" DllEntry="TestVerify" Execute="immediate" Return="check" />
     <CustomAction Id="FailForTest" BinaryRef="NativeActions" DllEntry="FailForTest" Execute="deferred" Impersonate="yes" Return="check" />
     <CustomAction Id="FailRemovalForTest" BinaryRef="NativeActions" DllEntry="FailForTest" Execute="deferred" Impersonate="yes" Return="check" />
     <?endif?>
     <Property Id="RollbackSelection" Hidden="yes" /><Property Id="ChangeSelection" Hidden="yes" /><Property Id="ChangeRemoval" Hidden="yes" /><Property Id="CommitLegacy" Hidden="yes" />
-    <WixVariable Id="WixUIWelcomeEulaDlgDescription" Value="Install Luma for your user account without administrator rights. Close Luma and Windows Screen Saver Settings first. Appearance preferences are kept. Open Windows Screen Saver Settings after installation to check your wait time and sign-in preference." />
+    <WixVariable Id="WixUIWelcomeEulaDlgDescription" Value="Install Flux for your user account without administrator rights. Close Flux and Windows Screen Saver Settings first. Appearance preferences are kept. Open Windows Screen Saver Settings after installation to check your wait time and sign-in preference." />
     <InstallExecuteSequence>
       <Custom Action="PrepareSelection" After="InstallInitialize" Condition="NOT UPGRADINGPRODUCTCODE" />
       <Custom Action="RollbackSelection" After="PrepareSelection" Condition="NOT UPGRADINGPRODUCTCODE" />
@@ -63,8 +63,8 @@
       <Custom Action="CommitLegacy" After="ChangeSelection" Condition="NOT UPGRADINGPRODUCTCODE AND NOT (REMOVE = &quot;ALL&quot;)" />
       <?if $(var.TestHooks) = 1 ?>
       <Custom Action="TestSeed" Before="PrepareSelection" Condition="NOT UPGRADINGPRODUCTCODE" />
-      <Custom Action="FailRemovalForTest" After="ChangeRemoval" Condition="LUMA_TEST_FAIL = 1 AND REMOVE = &quot;ALL&quot;" />
-      <Custom Action="FailForTest" After="ChangeSelection" Condition="LUMA_TEST_FAIL = 1 AND NOT (REMOVE = &quot;ALL&quot;)" />
+      <Custom Action="FailRemovalForTest" After="ChangeRemoval" Condition="FLUX_TEST_FAIL = 1 AND REMOVE = &quot;ALL&quot;" />
+      <Custom Action="FailForTest" After="ChangeSelection" Condition="FLUX_TEST_FAIL = 1 AND NOT (REMOVE = &quot;ALL&quot;)" />
       <Custom Action="TestVerify" After="InstallFinalize" Condition="NOT UPGRADINGPRODUCTCODE" />
       <?endif?>
     </InstallExecuteSequence>

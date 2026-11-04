@@ -1,6 +1,6 @@
 # Production MSI release preparation
 
-Luma v0.1.2 adds the Windows Installed Apps icon to the stable MSI distribution.
+Flux v0.1.2 adds the Windows Installed Apps icon to the stable MSI distribution.
 It retains the known uninstall rollback limitation and tested recovery instructions.
 The maintainer first authorized stable distribution with that limitation for
 v0.1.1 on 2026-10-12, prioritizing installation/migration and withdrawal of the
@@ -15,25 +15,25 @@ No automatic application updater is introduced by this installer work.
 ## Design
 
 The existing native Rust selection/migration actions are reused. Windows
-Installer owns the two payload files (`Luma.scr` and `LICENSE`). The production
-MSI installs in `%LOCALAPPDATA%\Luma\MSI`, without administrator rights or UAC.
+Installer owns the two payload files (`Flux.scr` and `LICENSE`). The production
+MSI installs in `%LOCALAPPDATA%\Flux\MSI`, without administrator rights or UAC.
 It has a separate upgrade family from the experimental prototype/candidate:
 `A51E59BE-C086-48C8-8BDA-B382C44316AE`. Test hooks are absent from production.
 WiX and its UI extension are pinned at 6.0.2; the native DLL uses a static CRT.
-Windows Installed Apps and Programs and Features use an embedded `Luma.ico`,
+Windows Installed Apps and Programs and Features use an embedded `Flux.ico`,
 derived from the site's existing `site/icon.svg`, through `ARPPRODUCTICON` and
 the MSI Icon table. Windows Installer caches the icon; it does not add a third
 payload file or require rebuilding the screensaver. Regenerate the multi-size
 ICO with `./scripts/generate-windows-icon.ps1` when the site symbol changes.
 Already installed copies receive the icon when updated with a newer MSI.
 The [WiX maintenance-fee policy](https://docs.firegiant.com/wix/whatsnew/)
-requires payment for revenue-generating use; Luma is an individual, noncommercial
+requires payment for revenue-generating use; Flux is an individual, noncommercial
 open-source project. Reassess the tool policy if that changes.
 
-Preferences at `%LOCALAPPDATA%\Luma\settings.json` are never installed, removed
+Preferences at `%LOCALAPPDATA%\Flux\settings.json` are never installed, removed
 or rewritten. Activation changes only the executable selection, not idle timeout,
 password requirements or activation. Selection type and bytes are backed up and
-rolled back. Removal restores the original selection only when Luma is still
+rolled back. Removal restores the original selection only when Flux is still
 selected. Repair and upgrades preserve a newer user selection.
 
 Managed ZIP/Inno copies in the default legacy directory are migrated. Inno
@@ -57,7 +57,7 @@ and check selection, preview, Settings, wait time and sign-in preference.
 Windows x64, stable Rust, PowerShell 7 and a .NET SDK (WiX build tool only):
 
 ```powershell
-cargo test --locked --release -p luma -p luma-desktop
+cargo test --locked --release -p flux -p flux-desktop
 ./scripts/test-deployment.ps1
 ./scripts/test-uninstall-handoff.ps1
 ./scripts/test-virustotal.ps1
@@ -101,7 +101,7 @@ The pure file-only rollback probe still fails on this Windows 11 26H2 host,
 build 26300.9550, MSI 5.0.26100.9549, without elevation. A failed uninstall restores
 the file, but a subsequent successful uninstall strands it. The runner repairs
 ownership and then removes the probe; cleanup passes and selection is unchanged.
-This occurs without any Luma DLL. It does not prove an OS-wide issue or justify
+This occurs without any Flux DLL. It does not prove an OS-wide issue or justify
 elevation.
 
 An independent laptop run on 2026-10-10 reproduced the same sequence with
@@ -128,7 +128,7 @@ existence is supporting context, not proof of a shared cause or a verified fix.
 No installer downloaded from that issue was executed: its MSI metadata was only
 read for comparison.
 
-The full [GitHub validation run](https://github.com/Ken5998/luma/actions/runs/38076913244)
+The full [GitHub validation run](https://github.com/LeonCB/flux/actions/runs/38076913244)
 passed, including real v0.1.0 Inno migration and removal after uninstall rollback.
 Downloaded MSI logs explicitly record `MsiRunningElevated=1`, `Privileged=1` and
 `AdminUser=1`, so this pass does not establish the required non-elevated behavior.
@@ -165,11 +165,11 @@ both Server runners. Its logs report `DisableMsi=1`: unmanaged non-elevated MSI
 is blocked by the runner policy. This is not a rollback result. The CI-only
 harness temporarily sets `DisableMSI=0` on the disposable VM and restores the
 previous policy afterward; it never enables `AlwaysInstallElevated`. No policy
-is changed by Luma or by the portable probe on a user's PC. See Microsoft's
+is changed by Flux or by the portable probe on a user's PC. See Microsoft's
 [DisableMSI policy documentation](https://learn.microsoft.com/en-us/windows/win32/msi/disablemsi).
 ### Completed standard-user comparison, 2026-10-10
 
-The final [comparison run](https://github.com/Ken5998/luma/actions/runs/38078420379)
+The final [comparison run](https://github.com/LeonCB/flux/actions/runs/38078420379)
 reproduces the stranded-file failure under standard-user tokens on both Server
 images, after the unmanaged-install policy adjustment described above:
 
@@ -212,9 +212,9 @@ Installer rather than overwriting them with ZIP scripts.
 
 ## Final v0.1.1 pre-release verification, 2026-10-10
 
-The [tag build](https://github.com/Ken5998/luma/actions/runs/38081976023)
+The [tag build](https://github.com/LeonCB/flux/actions/runs/38081976023)
 passed 52 default application tests, four native installer tests, deployment,
-uninstaller handoff and VirusTotal script tests. The [MSI integration run](https://github.com/Ken5998/luma/actions/runs/38081974342)
+uninstaller handoff and VirusTotal script tests. The [MSI integration run](https://github.com/LeonCB/flux/actions/runs/38081974342)
 passed activation, repair, upgrade, downgrade prevention, ZIP migration,
 transaction rollback and subsequent removal on an elevated disposable runner.
 This does not supersede the failed standard-user rollback evidence above.
@@ -224,13 +224,13 @@ all ZIP payload checksums and exact embedded MSI payload equality.
 
 | Final asset | SHA-256 |
 | --- | --- |
-| Luma-0.1.1-Setup-x64.msi | 19afabb4206f17367ca5f71fe10e4c3663ee71a73108fc0951a81c436f9ec6ad |
-| Luma-0.1.1-windows-x64.zip | 70110109409bd9bad52b6867fec7dd952d982c98887dffc4e318792ba7cd496b |
+| Flux-0.1.1-Setup-x64.msi | 19afabb4206f17367ca5f71fe10e4c3663ee71a73108fc0951a81c436f9ec6ad |
+| Flux-0.1.1-windows-x64.zip | 70110109409bd9bad52b6867fec7dd952d982c98887dffc4e318792ba7cd496b |
 
-The explicitly authorized [VirusTotal scan](https://github.com/Ken5998/luma/actions/runs/38082587207)
+The explicitly authorized [VirusTotal scan](https://github.com/LeonCB/flux/actions/runs/38082587207)
 completed for both exact final assets: **0 malicious and 0 suspicious** results
 for each, checked on 2026-10-10. Reports and recorded analysis IDs are in the
-[v0.1.1 release notes](https://github.com/Ken5998/luma/releases/tag/v0.1.1).
+[v0.1.1 release notes](https://github.com/LeonCB/flux/releases/tag/v0.1.1).
 Packages remain unsigned; this does not guarantee safety or remove SmartScreen.
 
 ## Stable promotion, 2026-10-12
@@ -250,9 +250,9 @@ a failed uninstall rollback can leave files after the next removal. Run the same
 MSI to reinstall/repair, then retry removal, as verified by the recovery tests.
 This is acceptance of a known issue, not a correction of it.
 
-## Luma v0.1.2 icon release, 2026-10-20
+## Flux v0.1.2 icon release, 2026-10-20
 
-The release adds the existing Luma website symbol to Windows Installed Apps and
+The release adds the existing Flux website symbol to Windows Installed Apps and
 Programs and Features via the MSI Icon table and `ARPPRODUCTICON`. The exact
 embedded icon is compared with the committed asset during package validation.
 The ICO has eight sizes, from 16 to 256 pixels; native Windows icon loading was
@@ -262,8 +262,8 @@ checked at every size. An existing MSI install receives the icon through update.
 - Local application tests: 52 passed, with GPU/interactive-only tests skipped.
 - Native installer unit tests: 4 passed; deployment, uninstall handoff and
   VirusTotal integration tests passed.
-- [Draft packaging workflow](https://github.com/Ken5998/luma/actions/runs/39433544379): passed.
-- [MSI validation workflow](https://github.com/Ken5998/luma/actions/runs/39433543902): passed,
+- [Draft packaging workflow](https://github.com/LeonCB/flux/actions/runs/39433544379): passed.
+- [MSI validation workflow](https://github.com/LeonCB/flux/actions/runs/39433543902): passed,
   including upgrade, downgrade prevention, selection restoration, ZIP migration,
   failed-install rollback, uninstall rollback and cleanup on an elevated runner.
   This does not establish that non-elevated uninstall rollback is fixed.
@@ -273,19 +273,19 @@ checked at every size. An existing MSI install receives the icon through update.
 
 | Final release file | SHA-256 |
 | --- | --- |
-| Luma-0.1.2-Setup-x64.msi | 51bf10f118f33583ee115f025f6c55d1defe3d34f5c31bd95d1e8f1f2b2bede6 |
-| Luma-0.1.2-windows-x64.zip | 1723690b480dee00717e8b2535f3cc3c951a35cb6265f9b135212da8e8799971 |
+| Flux-0.1.2-Setup-x64.msi | 51bf10f118f33583ee115f025f6c55d1defe3d34f5c31bd95d1e8f1f2b2bede6 |
+| Flux-0.1.2-windows-x64.zip | 1723690b480dee00717e8b2535f3cc3c951a35cb6265f9b135212da8e8799971 |
 
 Final VirusTotal analyses completed on 2026-10-20 for both exact release files:
 [MSI](https://www.virustotal.com/gui/file/51bf10f118f33583ee115f025f6c55d1defe3d34f5c31bd95d1e8f1f2b2bede6/detection)
 reported 0 malicious and 0 suspicious results (62 undetected; 13 unsupported);
 [ZIP](https://www.virustotal.com/gui/file/1723690b480dee00717e8b2535f3cc3c951a35cb6265f9b135212da8e8799971/detection)
 reported 0 malicious and 0 suspicious results (68 undetected).
-[Scan status refresh](https://github.com/Ken5998/luma/actions/runs/39436184536)
+[Scan status refresh](https://github.com/LeonCB/flux/actions/runs/39436184536)
 reused the original analysis IDs; the files were not reuploaded while queued.
 These results do not imply that unsupported engines scanned the MSI.
 
-The verified draft was published as [v0.1.2](https://github.com/Ken5998/luma/releases/tag/v0.1.2)
+The verified draft was published as [v0.1.2](https://github.com/LeonCB/flux/releases/tag/v0.1.2)
 on 2026-10-20, with the same scanned assets and checksums. README and website
 references were advanced to v0.1.2 after publication. The known non-elevated
 uninstall rollback limitation remains documented in the release notes.

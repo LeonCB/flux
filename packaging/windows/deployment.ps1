@@ -1,12 +1,12 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-function Get-LumaSelection {
+function Get-FluxSelection {
     $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey('Control Panel\Desktop')
     try { if ($key) { return $key.GetValue('SCRNSAVE.EXE', $null) } } finally { if ($key) { $key.Dispose() } }
 }
 
-function Set-LumaSelection($Path) {
+function Set-FluxSelection($Path) {
     $key = [Microsoft.Win32.Registry]::CurrentUser.CreateSubKey('Control Panel\Desktop')
     try {
         if ($null -eq $Path) { $key.DeleteValue('SCRNSAVE.EXE', $false) }
@@ -14,12 +14,12 @@ function Set-LumaSelection($Path) {
     } finally { $key.Dispose() }
 }
 
-function Get-LumaInstallDirectory {
+function Get-FluxInstallDirectory {
     if ([string]::IsNullOrWhiteSpace($env:LOCALAPPDATA)) { throw 'LOCALAPPDATA is unavailable.' }
-    Join-Path $env:LOCALAPPDATA 'Luma\Screensaver'
+    Join-Path $env:LOCALAPPDATA 'Flux\Screensaver'
 }
 
-function Write-LumaFile($Source, $Destination) {
+function Write-FluxFile($Source, $Destination) {
     $temporary = $Destination + '.' + [Guid]::NewGuid().ToString('N') + '.tmp'
     try {
         [System.IO.File]::Copy($Source, $temporary, $false)
@@ -31,78 +31,78 @@ function Write-LumaFile($Source, $Destination) {
     }
 }
 
-function Install-Luma($SourceDirectory, $InstallDirectory) {
+function Install-Flux($SourceDirectory, $InstallDirectory) {
     $SourceDirectory = [System.IO.Path]::GetFullPath($SourceDirectory)
     $InstallDirectory = [System.IO.Path]::GetFullPath($InstallDirectory)
     if ($SourceDirectory -eq $InstallDirectory) { throw 'Run Install from the extracted package, not the installation directory.' }
-    $files = @('Luma.scr','LICENSE','deployment.ps1','Uninstall.ps1','Uninstall.cmd')
+    $files = @('Flux.scr','LICENSE','deployment.ps1','Uninstall.ps1','Uninstall.cmd')
     foreach ($file in $files) {
         if (!(Test-Path -LiteralPath (Join-Path $SourceDirectory $file) -PathType Leaf)) { throw "Package file missing: $file" }
     }
-    $binary = Join-Path $SourceDirectory 'Luma.scr'
+    $binary = Join-Path $SourceDirectory 'Flux.scr'
     $stream = [System.IO.File]::OpenRead($binary)
-    try { if ($stream.ReadByte() -ne 77 -or $stream.ReadByte() -ne 90) { throw 'Luma.scr is not a Windows executable.' } } finally { $stream.Dispose() }
-    $destination = Join-Path $InstallDirectory 'Luma.scr'
+    try { if ($stream.ReadByte() -ne 77 -or $stream.ReadByte() -ne 90) { throw 'Flux.scr is not a Windows executable.' } } finally { $stream.Dispose() }
+    $destination = Join-Path $InstallDirectory 'Flux.scr'
     $manifestPath = Join-Path $InstallDirectory 'installation.json'
     $existing = Test-Path -LiteralPath $manifestPath
     if ($existing) {
         $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
         if ($manifest.schema -ne 1) { throw 'Unsupported installation metadata.' }
     } else {
-        # Capture the original choice once. Updates must not replace it with Luma itself.
-        $manifest = [ordered]@{ schema=1; previousScreenSaver=(Get-LumaSelection) }
-        if (Test-Path -LiteralPath $destination) { throw 'Unmanaged Luma.scr found in the installation folder. Move it before installing.' }
+        # Capture the original choice once. Updates must not replace it with Flux itself.
+        $manifest = [ordered]@{ schema=1; previousScreenSaver=(Get-FluxSelection) }
+        if (Test-Path -LiteralPath $destination) { throw 'Unmanaged Flux.scr found in the installation folder. Move it before installing.' }
     }
     [void][System.IO.Directory]::CreateDirectory($InstallDirectory)
     if (!$existing) {
         [System.IO.File]::WriteAllText($manifestPath, ($manifest | ConvertTo-Json), (New-Object System.Text.UTF8Encoding($false)))
     }
     # Replace the binary first. A running saver/preview must fail before registry changes.
-    try { Write-LumaFile $binary $destination }
-    catch { throw "Could not install Luma.scr. Close Luma and Windows Screen Saver Settings, then retry. $($_.Exception.Message)" }
-    foreach ($file in $files | Where-Object { $_ -ne 'Luma.scr' }) {
-        Write-LumaFile (Join-Path $SourceDirectory $file) (Join-Path $InstallDirectory $file)
+    try { Write-FluxFile $binary $destination }
+    catch { throw "Could not install Flux.scr. Close Flux and Windows Screen Saver Settings, then retry. $($_.Exception.Message)" }
+    foreach ($file in $files | Where-Object { $_ -ne 'Flux.scr' }) {
+        Write-FluxFile (Join-Path $SourceDirectory $file) (Join-Path $InstallDirectory $file)
     }
 
-    Set-LumaSelection $destination
+    Set-FluxSelection $destination
     Write-Output "Installed for the current user: $destination"
 }
 
-function Uninstall-Luma($InstallDirectory) {
+function Uninstall-Flux($InstallDirectory) {
     $InstallDirectory = [System.IO.Path]::GetFullPath($InstallDirectory)
     $manifestPath = Join-Path $InstallDirectory 'installation.json'
-    if (!(Test-Path -LiteralPath $manifestPath)) { throw 'No managed Luma installation was found.' }
+    if (!(Test-Path -LiteralPath $manifestPath)) { throw 'No managed Flux installation was found.' }
     $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
     if ($manifest.schema -ne 1) { throw 'Unsupported installation metadata.' }
-    $destination = Join-Path $InstallDirectory 'Luma.scr'
+    $destination = Join-Path $InstallDirectory 'Flux.scr'
     # Check the executable before changing the user's selection.
     if (Test-Path -LiteralPath $destination) {
         try {
             $probe = [System.IO.File]::Open($destination, 'Open', 'ReadWrite', 'None')
             $probe.Dispose()
-        } catch { throw 'Luma is in use. Close the screensaver, its settings, and the Windows preview, then retry.' }
+        } catch { throw 'Flux is in use. Close the screensaver, its settings, and the Windows preview, then retry.' }
     }
-    $selection = Get-LumaSelection
+    $selection = Get-FluxSelection
     $selected = $selection -eq $destination
     if ($selected) {
         $previous = $manifest.previousScreenSaver
         if ($previous -and (Test-Path -LiteralPath ([Environment]::ExpandEnvironmentVariables($previous)))) {
-            Set-LumaSelection $previous
-        } else { Set-LumaSelection $null }
+            Set-FluxSelection $previous
+        } else { Set-FluxSelection $null }
     }
     try {
         if (Test-Path -LiteralPath $destination) { [System.IO.File]::Delete($destination) }
     } catch {
-        if ($selected) { Set-LumaSelection $selection }
+        if ($selected) { Set-FluxSelection $selection }
         throw
     }
     # Delete only owned, explicit files. Never recurse into the user preferences folder.
-    foreach ($file in @('LICENSE','deployment.ps1','Uninstall.ps1','Uninstall.cmd','installation.json','Luma.log')) {
+    foreach ($file in @('LICENSE','deployment.ps1','Uninstall.ps1','Uninstall.cmd','installation.json','Flux.log')) {
         $path = Join-Path $InstallDirectory $file
         if (Test-Path -LiteralPath $path -PathType Leaf) { [System.IO.File]::Delete($path) }
     }
     if (@(Get-ChildItem -LiteralPath $InstallDirectory -Force).Count -eq 0) {
         [System.IO.Directory]::Delete($InstallDirectory, $false)
     }
-    Write-Output 'Luma uninstalled. Your preferences have been kept.'
+    Write-Output 'Flux uninstalled. Your preferences have been kept.'
 }

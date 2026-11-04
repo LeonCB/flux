@@ -26,7 +26,7 @@ jobs:
           dotnet-version: 10.0.x
       - name: Test application and deployment boundaries
         run: |
-          cargo test --locked --release -p luma -p luma-desktop
+          cargo test --locked --release -p flux -p flux-desktop
           if ($LASTEXITCODE -ne 0) { throw 'Application tests failed.' }
           ./scripts/test-deployment.ps1
           ./scripts/test-uninstall-handoff.ps1
@@ -37,20 +37,20 @@ jobs:
         run: |
           $metadata = cargo metadata --locked --no-deps --format-version 1 | ConvertFrom-Json
           if ($LASTEXITCODE -ne 0) { throw 'Cargo metadata failed.' }
-          $version = ($metadata.packages | Where-Object name -eq 'luma-desktop').version
-          "LUMA_VERSION=$version" | Add-Content $env:GITHUB_ENV
+          $version = ($metadata.packages | Where-Object name -eq 'flux-desktop').version
+          "FLUX_VERSION=$version" | Add-Content $env:GITHUB_ENV
           ./scripts/package-release.ps1
       - name: Test native MSI integration on a disposable runner
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           $payload = Join-Path $PWD 'target/integration-payload'
-          $version = $env:LUMA_VERSION
+          $version = $env:FLUX_VERSION
           $parts = $version.Split('.')
           if ([int]$parts[2] -ge 65535) { throw 'Integration upgrade version exceeds MSI limits.' }
           $upgradeVersion = "$($parts[0]).$($parts[1]).$([int]$parts[2] + 1)"
-          Expand-Archive "target/releases/$version/Luma-$version-windows-x64.zip" $payload
-          $payload = Join-Path $payload 'Luma-windows-x64'
+          Expand-Archive "target/releases/$version/Flux-$version-windows-x64.zip" $payload
+          $payload = Join-Path $payload 'Flux-windows-x64'
           ./scripts/package-msi.ps1 -Version $version -PayloadDirectory $payload -TestHooks
           ./scripts/package-msi.ps1 -Version $upgradeVersion -PayloadDirectory $payload -TestHooks
           $identity = [Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent())
@@ -58,14 +58,14 @@ jobs:
           # The legacy Inno EXE is retired from public downloads. The actual
           # migration pass is recorded in run 38076913244; retained local copies
           # can still be supplied with -LegacySetupPath for migration regression.
-          ./scripts/test-msi-release.ps1 -MsiPath "target/msi/$version/test/Luma-$version-Setup-x64.msi" -UpgradeMsiPath "target/msi/$upgradeVersion/test/Luma-$upgradeVersion-Setup-x64.msi" -PayloadDirectory $payload
+          ./scripts/test-msi-release.ps1 -MsiPath "target/msi/$version/test/Flux-$version-Setup-x64.msi" -UpgradeMsiPath "target/msi/$upgradeVersion/test/Flux-$upgradeVersion-Setup-x64.msi" -PayloadDirectory $payload
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: luma-msi-release-review
+          name: flux-msi-release-review
           path: |
-            target/releases/${{ env.LUMA_VERSION }}/Luma-${{ env.LUMA_VERSION }}-Setup-x64.msi
-            target/releases/${{ env.LUMA_VERSION }}/Luma-${{ env.LUMA_VERSION }}-windows-x64.zip
-            target/releases/${{ env.LUMA_VERSION }}/SHA256SUMS.txt
+            target/releases/${{ env.FLUX_VERSION }}/Flux-${{ env.FLUX_VERSION }}-Setup-x64.msi
+            target/releases/${{ env.FLUX_VERSION }}/Flux-${{ env.FLUX_VERSION }}-windows-x64.zip
+            target/releases/${{ env.FLUX_VERSION }}/SHA256SUMS.txt
             target/msi-release-tests-*/
           if-no-files-found: error

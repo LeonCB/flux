@@ -481,7 +481,7 @@ impl Context {
         {
             let workgroup = field.workgroup_count();
             let mut cpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-                label: Some("luma::resample_velocity"),
+                label: Some("flux::resample_velocity"),
                 timestamp_writes: None,
             });
             cpass.set_pipeline(&self.resample_pipeline);

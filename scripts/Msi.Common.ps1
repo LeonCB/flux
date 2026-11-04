@@ -1,7 +1,7 @@
 #requires -Version 7.0
 # Shared, pinned compiler for production MSI and isolated integration packages.
 $ErrorActionPreference = 'Stop'
-function Get-LumaWix {
+function Get-FluxWix {
     $repo = Split-Path $PSScriptRoot -Parent
     $tools = Join-Path $repo 'target/tools/wix-production'
     $wix = Join-Path $tools 'wix.exe'
@@ -21,7 +21,7 @@ function Get-LumaWix {
     if (!(Test-Path -LiteralPath $extension)) { throw 'Pinned UI extension missing.' }
     return @{ Compiler=$wix; Extension=$extension }
 }
-function Assert-LumaMsiVersion([string]$Version) {
+function Assert-FluxMsiVersion([string]$Version) {
     if ($Version -cnotmatch '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$') { throw 'A stable three-part version is required.' }
     $parts = $Version.Split('.')
     if ([int]$parts[0] -gt 255 -or [int]$parts[1] -gt 255 -or [int]$parts[2] -gt 65535) { throw 'Version exceeds MSI limits.' }

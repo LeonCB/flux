@@ -7,17 +7,17 @@ v0.1.0 package.
 
 ## Behavior
 
-- Per-user installation in `%LOCALAPPDATA%\Luma\WindowsInstaller`.
-- Exact published v0.1.0 `Luma.scr`, plus the current repository MIT license,
-  including both upstream and Luma copyright notices.
+- Per-user installation in `%LOCALAPPDATA%\Flux\WindowsInstaller`.
+- Exact published v0.1.0 `Flux.scr`, plus the current repository MIT license,
+  including both upstream and Flux copyright notices.
 - Native Rust DLL actions; no PowerShell is shipped or launched for normal MSI
   activation, restoration, repair or ZIP migration. The legacy Inno uninstaller,
   if used for migration, still runs its existing PowerShell helper.
-- First installation selects Luma and saves the previous selection's registry
+- First installation selects Flux and saves the previous selection's registry
   type and bytes. Uninstall restores that value only if this copy is still
   selected. Repair and upgrade preserve a newer user choice.
 - Selection changes have matching rollback actions.
-- Managed ZIP migration retains the pre-Luma selection, removes only explicitly
+- Managed ZIP migration retains the pre-Flux selection, removes only explicitly
   owned legacy files after installation commits, and preserves unknown files and
   preferences. Unmanaged or invalid metadata stops installation before changes.
 - Inno migration requires a valid registration pointing to the matching legacy
@@ -26,10 +26,10 @@ v0.1.0 package.
   Uninstall the old installer through Windows Installed Apps before retrying.
 - Legacy cleanup is a commit action. A cleanup failure is logged and can leave
   the old installation present; installation of the new copy has already committed.
-- Close Luma and its Windows preview/settings before installation or removal.
+- Close Flux and its Windows preview/settings before installation or removal.
 
 The candidate uses the prototype's upgrade family; remove any old MSI prototype
-before manual testing. Its test version numbers do not change Luma's public version.
+before manual testing. Its test version numbers do not change Flux's public version.
 
 ## Build
 
@@ -51,8 +51,8 @@ For integration testing, build two dedicated test packages:
 ./scripts/package-msi-candidate.ps1 -TestHooks
 ./scripts/package-msi-candidate.ps1 -Version 0.1.3 -TestHooks
 ./scripts/test-msi-candidate.ps1 `
-  -MsiPath target/msi-candidate/0.1.2/test/Luma-0.1.2-MSI-Candidate-x64.msi `
-  -UpgradeMsiPath target/msi-candidate/0.1.3/test/Luma-0.1.3-MSI-Candidate-x64.msi
+  -MsiPath target/msi-candidate/0.1.2/test/Flux-0.1.2-MSI-Candidate-x64.msi `
+  -UpgradeMsiPath target/msi-candidate/0.1.3/test/Flux-0.1.3-MSI-Candidate-x64.msi
 ```
 
 The test runner supports Windows PowerShell 5.1 and PowerShell 7. Run the tests
@@ -79,7 +79,7 @@ The integration tests passed these cases in the automated environment:
 - Major upgrade, downgrade prevention, preservation of a newer selection.
 - Managed ZIP migration, failed migration rollback and unknown-file preservation.
 
-**Outstanding:** an injected uninstall failure restores Luma's selection, but
+**Outstanding:** an injected uninstall failure restores Flux's selection, but
 Windows Installer's own rollback logs registry errors (including access denied and
 invalid owner). Subsequent uninstall can leave files because component ownership
 was lost. Test cleanup repairs the MSI before removing it. The full test command
@@ -89,7 +89,7 @@ environment. Do not interpret the passing selection assertion alone as a
 successful uninstall rollback.
 
 A separate minimal per-user MSI installing only `LICENSE` reproduced the same
-failure when a deferred DLL action simply returned 1603. It did not run any Luma
+failure when a deferred DLL action simply returned 1603. It did not run any Flux
 selection, restoration or migration code. Subsequent removal returned 0 but left
 the license file, with the same registry errors 5 and 1307 in rollback. This
 narrows the issue to the per-user MSI transaction/rollback path on this system;
@@ -154,7 +154,7 @@ hand to make removal assertions pass. Reports capture elevation, package hash,
 Windows/MSI versions, stage results, cleanup, and unchanged screen saver selection.
 
 An ignored, portable comparison ZIP was prepared at
-`target/debug-packages/Luma-MSI-Rollback-Probe.zip`. It contains the prebuilt x64
+`target/debug-packages/Flux-MSI-Rollback-Probe.zip`. It contains the prebuilt x64
 MSI, runner, license, instructions and checksums, with no Rust/WiX dependency on
 the comparison PC. Run the included script from a non-elevated PowerShell.
 The tested portable report confirms `cleanupPassed=true` and

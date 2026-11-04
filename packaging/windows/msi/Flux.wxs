@@ -1,28 +1,28 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
-  <Package Name="Luma MSI Prototype" Manufacturer="Kenan Kasumović" Version="$(var.Version)"
+  <Package Name="Flux MSI Prototype" Manufacturer="Kenan Kasumović" Version="$(var.Version)"
            UpgradeCode="42DE6B9C-4A80-4BA8-9886-8D8F9B7F24AD" Scope="perUser" Language="1033" Codepage="65001">
     <SummaryInformation Codepage="1250" />
-    <MajorUpgrade DowngradeErrorMessage="A newer Luma MSI prototype is already installed." Schedule="afterInstallExecute" />
+    <MajorUpgrade DowngradeErrorMessage="A newer Flux MSI prototype is already installed." Schedule="afterInstallExecute" />
     <MediaTemplate EmbedCab="yes" />
-    <Launch Condition="Installed OR NOT RollbackDisabled" Message="Enable Windows Installer rollback before installing Luma." />
+    <Launch Condition="Installed OR NOT RollbackDisabled" Message="Enable Windows Installer rollback before installing Flux." />
     <Property Id="ARPURLINFOABOUT" Value="https://luma.ksmvc.ch" />
     <StandardDirectory Id="LocalAppDataFolder">
-      <Directory Id="LumaFolder" Name="Luma">
+      <Directory Id="FluxFolder" Name="Flux">
         <Component Id="ParentFolderCleanup" Guid="D8125EBC-7DD4-4D88-AF14-008BD9F87CDD">
-          <RegistryValue Root="HKCU" Key="Software\Luma\MsiPrototype" Name="ParentFolder" Value="1" Type="integer" KeyPath="yes" />
+          <RegistryValue Root="HKCU" Key="Software\Flux\MsiPrototype" Name="ParentFolder" Value="1" Type="integer" KeyPath="yes" />
           <RemoveFolder Id="RemoveEmptyParent" On="uninstall" />
         </Component>
         <Directory Id="INSTALLFOLDER" Name="MSI-Prototype">
           <Component Id="Payload" Guid="CAC883B3-AE16-463B-9E45-409AE25E2AD6">
-            <File Id="ScreenSaver" Source="$(var.Payload)/Luma.scr" />
+            <File Id="ScreenSaver" Source="$(var.Payload)/Flux.scr" />
             <File Source="$(var.Payload)/LICENSE" />
-            <RegistryValue Root="HKCU" Key="Software\Luma\MsiPrototype" Name="InstallDirectory" Value="[INSTALLFOLDER]" Type="string" KeyPath="yes" />
+            <RegistryValue Root="HKCU" Key="Software\Flux\MsiPrototype" Name="InstallDirectory" Value="[INSTALLFOLDER]" Type="string" KeyPath="yes" />
             <RemoveFolder Id="RemoveInstallFolder" On="uninstall" />
           </Component>
         </Directory>
       </Directory>
     </StandardDirectory>
-    <Feature Id="Main" Title="Luma" Level="1"><ComponentRef Id="Payload" /><ComponentRef Id="ParentFolderCleanup" /></Feature>
+    <Feature Id="Main" Title="Flux" Level="1"><ComponentRef Id="Payload" /><ComponentRef Id="ParentFolderCleanup" /></Feature>
     <ui:WixUI Id="WixUI_Minimal" />
     <WixVariable Id="WixUILicenseRtf" Value="$(var.LicenseRtf)" />
   </Package>

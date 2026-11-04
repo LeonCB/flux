@@ -22,7 +22,7 @@ jobs:
       - name: Set up Rust
         run: rustup default stable
       - name: Test desktop and renderer
-        run: cargo test --locked --release -p luma -p luma-desktop
+        run: cargo test --locked --release -p flux -p flux-desktop
       - name: Build install package
         shell: pwsh
         run: ./scripts/package-windows.ps1
@@ -30,8 +30,8 @@ jobs:
         with:
           name: windows-package
           path: |
-            target/distribution/Luma-windows-x64.zip
-            target/distribution/Luma-windows-x64.zip.sha256
+            target/distribution/Flux-windows-x64.zip
+            target/distribution/Flux-windows-x64.zip.sha256
   pages:
     needs: windows
     runs-on: ubuntu-latest

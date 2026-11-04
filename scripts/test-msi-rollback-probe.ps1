@@ -8,7 +8,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
 if (!$WixPath) { $WixPath = Join-Path $repo 'target\tools\wix\wix.exe' }
-$folder = Join-Path $env:LOCALAPPDATA 'Luma\MSI-Rollback-Probe'
+$folder = Join-Path $env:LOCALAPPDATA 'Flux\MSI-Rollback-Probe'
 if (Test-Path -LiteralPath $folder) { throw 'An existing rollback probe is present. Remove it through Windows Installer before testing.' }
 $outputRoot = if ($MsiPath) { Join-Path $PSScriptRoot 'logs' } else { Join-Path $repo 'target' }
 $out = Join-Path $outputRoot ('msi-rollback-probe-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
@@ -19,14 +19,14 @@ $upgrade = [guid]::NewGuid().ToString()
 $component = [guid]::NewGuid().ToString()
 $wxs = @'
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-  <Package Name="Luma MSI Rollback Probe" Manufacturer="Luma" Version="0.0.1" UpgradeCode="$(var.Upgrade)" Scope="perUser">
+  <Package Name="Flux MSI Rollback Probe" Manufacturer="Flux" Version="0.0.1" UpgradeCode="$(var.Upgrade)" Scope="perUser">
     <MediaTemplate EmbedCab="yes" />
     <StandardDirectory Id="LocalAppDataFolder">
-      <Directory Id="LumaFolder" Name="Luma">
+      <Directory Id="FluxFolder" Name="Flux">
         <Directory Id="ProbeDir" Name="MSI-Rollback-Probe">
           <Component Id="Probe" Guid="$(var.Component)">
             <File Source="$(var.License)" />
-            <RegistryValue Root="HKCU" Key="Software\Luma\RollbackProbe\$(var.Component)" Name="Installed" Value="1" Type="integer" KeyPath="yes" />
+            <RegistryValue Root="HKCU" Key="Software\Flux\RollbackProbe\$(var.Component)" Name="Installed" Value="1" Type="integer" KeyPath="yes" />
             <RemoveFolder Id="CleanProbe" On="uninstall" />
           </Component>
         </Directory>
@@ -49,7 +49,7 @@ if ($MsiPath) {
     $view = $db.OpenView('SELECT `Value` FROM `Property` WHERE `Property` = ''ProductName''')
     $view.Execute()
     $row = $view.Fetch()
-    if (!$row -or $row.StringData(1) -ne 'Luma MSI Rollback Probe') { throw 'This is not a Luma rollback probe package.' }
+    if (!$row -or $row.StringData(1) -ne 'Flux MSI Rollback Probe') { throw 'This is not a Flux rollback probe package.' }
     $view.Close()
     [Runtime.InteropServices.Marshal]::FinalReleaseComObject($view) | Out-Null
     [Runtime.InteropServices.Marshal]::FinalReleaseComObject($db) | Out-Null
@@ -98,5 +98,5 @@ try {
     if (!$clean) { throw "Probe cleanup left files. Logs: $out" }
     if ($selection -cne $selectionAfter) { throw 'The screen saver selection changed during a file-only probe.' }
 }
-if ($stranded) { throw "Confirmed: a standard MSI rollback stranded its file without any Luma DLL. Elevated=$elevated. Logs: $out" }
+if ($stranded) { throw "Confirmed: a standard MSI rollback stranded its file without any Flux DLL. Elevated=$elevated. Logs: $out" }
 Write-Output "PASS: standard MSI uninstall rollback and subsequent removal. Elevated=$elevated. Logs: $out"

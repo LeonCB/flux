@@ -27,10 +27,10 @@ jobs:
         run: |
           $metadata = cargo metadata --locked --no-deps --format-version 1 | ConvertFrom-Json
           if ($LASTEXITCODE -ne 0) { throw 'Cargo metadata failed.' }
-          $version = ($metadata.packages | Where-Object name -eq 'luma-desktop').version
+          $version = ($metadata.packages | Where-Object name -eq 'flux-desktop').version
           if ($env:GITHUB_REF_NAME -cne "v$version") { throw 'Tag must match the Cargo workspace version.' }
-          "LUMA_VERSION=$version" | Add-Content $env:GITHUB_ENV
-          cargo test --locked --release -p luma -p luma-desktop
+          "FLUX_VERSION=$version" | Add-Content $env:GITHUB_ENV
+          cargo test --locked --release -p flux -p flux-desktop
           if ($LASTEXITCODE -ne 0) { throw 'Application tests failed.' }
           cargo test --locked --manifest-path packaging/windows/msi/Cargo.toml
           if ($LASTEXITCODE -ne 0) { throw 'Native installer tests failed.' }
@@ -43,9 +43,9 @@ jobs:
         with:
           name: release-packages
           path: |
-            target/releases/${{ env.LUMA_VERSION }}/Luma-${{ env.LUMA_VERSION }}-Setup-x64.msi
-            target/releases/${{ env.LUMA_VERSION }}/Luma-${{ env.LUMA_VERSION }}-windows-x64.zip
-            target/releases/${{ env.LUMA_VERSION }}/SHA256SUMS.txt
+            target/releases/${{ env.FLUX_VERSION }}/Flux-${{ env.FLUX_VERSION }}-Setup-x64.msi
+            target/releases/${{ env.FLUX_VERSION }}/Flux-${{ env.FLUX_VERSION }}-windows-x64.zip
+            target/releases/${{ env.FLUX_VERSION }}/SHA256SUMS.txt
           if-no-files-found: error
   draft:
     needs: package
@@ -76,4 +76,4 @@ jobs:
           cd release-packages
           sha256sum --strict --check SHA256SUMS.txt
           cd ..
-          gh release create "$GITHUB_REF_NAME" --verify-tag --draft --title "Luma v$version" --notes-file "docs/RELEASE-v$version.md" "release-packages/Luma-$version-Setup-x64.msi" "release-packages/Luma-$version-windows-x64.zip" release-packages/SHA256SUMS.txt
+          gh release create "$GITHUB_REF_NAME" --verify-tag --draft --title "Flux v$version" --notes-file "docs/RELEASE-v$version.md" "release-packages/Flux-$version-Setup-x64.msi" "release-packages/Flux-$version-windows-x64.zip" release-packages/SHA256SUMS.txt

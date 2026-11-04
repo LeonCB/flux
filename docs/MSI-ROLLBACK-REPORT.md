@@ -62,16 +62,16 @@ does not exercise the same rollback, so it is not a solution.
 
 Reproduction source:
 
-- [File-only authoring and portable runner](https://github.com/Ken5998/luma/blob/279afe08abaed7f5c1e061f9fddeb5815ee2e2d4/scripts/test-msi-rollback-probe.ps1)
-- [Standard-user CI harness](https://github.com/Ken5998/luma/blob/279afe08abaed7f5c1e061f9fddeb5815ee2e2d4/scripts/test-msi-standard-user-ci.ps1)
-- [CI workflow](https://github.com/Ken5998/luma/blob/279afe08abaed7f5c1e061f9fddeb5815ee2e2d4/.github/workflows/msi-rollback-validation.yml)
-- [Reproduction on both Server versions, with diagnostic artifacts](https://github.com/Ken5998/luma/actions/runs/38078420379)
+- [File-only authoring and portable runner](https://github.com/LeonCB/flux/blob/279afe08abaed7f5c1e061f9fddeb5815ee2e2d4/scripts/test-msi-rollback-probe.ps1)
+- [Standard-user CI harness](https://github.com/LeonCB/flux/blob/279afe08abaed7f5c1e061f9fddeb5815ee2e2d4/scripts/test-msi-standard-user-ci.ps1)
+- [CI workflow](https://github.com/LeonCB/flux/blob/279afe08abaed7f5c1e061f9fddeb5815ee2e2d4/.github/workflows/msi-rollback-validation.yml)
+- [Reproduction on both Server versions, with diagnostic artifacts](https://github.com/LeonCB/flux/actions/runs/38078420379)
 
 To build on Windows with PowerShell 7 and a .NET SDK:
 
 ```powershell
 . ./scripts/Msi.Common.ps1
-$wix = Get-LumaWix
+$wix = Get-FluxWix
 ./scripts/test-msi-rollback-probe.ps1 -WixPath $wix.Compiler
 ```
 

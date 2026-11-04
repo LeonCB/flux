@@ -5,9 +5,9 @@ thread_local! { static USER_SID: RefCell<String> = const { RefCell::new(String::
 type Key = *mut c_void;
 const DESKTOP: &str = "Control Panel\\Desktop";
 #[cfg(feature = "candidate-identity")]
-const STATE: &str = "Software\\Luma\\WindowsInstaller";
+const STATE: &str = "Software\\Flux\\WindowsInstaller";
 #[cfg(not(feature = "candidate-identity"))]
-const STATE: &str = "Software\\Luma\\Installer";
+const STATE: &str = "Software\\Flux\\Installer";
 const SELECTION: &str = "SCRNSAVE.EXE";
 const PREVIOUS: &str = "PreviousSelection";
 const LEGACY_KEY: &str = "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{AE5327E7-474B-47B6-BF01-2D5352A418AF}_is1";
@@ -242,7 +242,7 @@ fn run(handle: u32, action: impl FnOnce() -> Result<(), String>) -> u32 {
             };
             unsafe {
                 let record = MsiCreateRecord(0);
-                MsiRecordSetStringW(record, 0, wide(&format!("Luma MSI: {message}")).as_ptr());
+                MsiRecordSetStringW(record, 0, wide(&format!("Flux MSI: {message}")).as_ptr());
                 MsiProcessMessage(handle, 0x01000000, record);
                 MsiCloseHandle(record);
             }
@@ -349,7 +349,7 @@ fn probe_binary(path: &str) -> Result<(), String> {
             .share_mode(0)
             .open(path)
             .map_err(|e| {
-                format!("Close Luma and Windows Screen Saver Settings, then retry: {e}")
+                format!("Close Flux and Windows Screen Saver Settings, then retry: {e}")
             })?;
     }
     Ok(())
@@ -380,17 +380,17 @@ pub extern "system" fn Prepare(handle: u32) -> u32 {
         #[cfg(all(not(feature = "test-hooks"), not(feature = "candidate-identity")))]
         {
             let expected = std::path::Path::new(&property(handle, "LocalAppDataFolder")?)
-                .join("Luma")
+                .join("Flux")
                 .join("MSI");
             if !same_path(
                 folder.trim_end_matches(['\\', '/']),
                 &expected.to_string_lossy(),
             ) {
-                return Err("Use Luma's default per-user installation directory".into());
+                return Err("Use Flux's default per-user installation directory".into());
             }
         }
         let path = std::path::Path::new(&folder)
-            .join("Luma.scr")
+            .join("Flux.scr")
             .to_string_lossy()
             .into_owned();
         probe_binary(&path)?;
@@ -402,7 +402,7 @@ pub extern "system" fn Prepare(handle: u32) -> u32 {
         #[cfg(not(feature = "test-hooks"))]
         let report = String::new();
         #[cfg(feature = "test-hooks")]
-        let report = property(handle, "LUMA_REPORT")?;
+        let report = property(handle, "FLUX_REPORT")?;
         set(
             handle,
             "RollbackSelection",
@@ -419,7 +419,7 @@ pub extern "system" fn Prepare(handle: u32) -> u32 {
         #[cfg(all(not(feature = "test-hooks"), not(feature = "candidate-identity")))]
         {
             let expected = std::path::Path::new(&property(handle, "LocalAppDataFolder")?)
-                .join("Luma")
+                .join("Flux")
                 .join("Screensaver");
             if !same_path(
                 legacy.trim_end_matches(['\\', '/']),
@@ -432,11 +432,11 @@ pub extern "system" fn Prepare(handle: u32) -> u32 {
         let mut legacy_command = String::new();
         if !removing
             && !same_path(&folder, &legacy)
-            && std::path::Path::new(&legacy).join("Luma.scr").is_file()
+            && std::path::Path::new(&legacy).join("Flux.scr").is_file()
         {
             let legacy_previous = legacy_original(&legacy)?;
             let legacy_binary = std::path::Path::new(&legacy)
-                .join("Luma.scr")
+                .join("Flux.scr")
                 .to_string_lossy()
                 .into_owned();
             probe_binary(&legacy_binary)?;
@@ -460,7 +460,7 @@ pub extern "system" fn Prepare(handle: u32) -> u32 {
                     if name.starts_with("unins")
                         && (name.ends_with(".exe") || name.ends_with(".dat"))
                     {
-                        return Err("The legacy installer registration is unavailable. Uninstall the existing Luma installer through Windows Installed Apps, then retry; preferences are retained.".into());
+                        return Err("The legacy installer registration is unavailable. Uninstall the existing Flux installer through Windows Installed Apps, then retry; preferences are retained.".into());
                     }
                 }
                 legacy_mode = "zip";
@@ -528,7 +528,7 @@ pub extern "system" fn Change(handle: u32) -> u32 {
             "repair" => {}
             _ => return Err("Invalid action mode".into()),
         }
-        log(handle, "Luma screensaver selection action completed");
+        log(handle, "Flux screensaver selection action completed");
         Ok(())
     })
 }
@@ -580,12 +580,12 @@ pub extern "system" fn CommitLegacy(handle: u32) -> u32 {
             loop {
                 if let Some(status) = process.try_wait().map_err(|e| e.to_string())? {
                     if !status.success() {
-                        return Err("Luma MSI is installed, but the previous installer's removal failed. Remove the old entry through Windows Installed Apps.".into());
+                        return Err("Flux MSI is installed, but the previous installer's removal failed. Remove the old entry through Windows Installed Apps.".into());
                     }
                     break;
                 }
                 if std::time::Instant::now() >= deadline {
-                    return Err("Luma MSI is installed, but legacy removal has not completed; no process was terminated.".into());
+                    return Err("Flux MSI is installed, but legacy removal has not completed; no process was terminated.".into());
                 }
                 std::thread::sleep(std::time::Duration::from_millis(200));
             }
@@ -595,12 +595,12 @@ pub extern "system" fn CommitLegacy(handle: u32) -> u32 {
             {
                 write(DESKTOP, SELECTION, &selection)?;
             }
-            if std::path::Path::new(folder).join("Luma.scr").exists() {
-                return Err("The old Luma payload remains after migration. The new MSI installation is retained.".into());
+            if std::path::Path::new(folder).join("Flux.scr").exists() {
+                return Err("The old Flux payload remains after migration. The new MSI installation is retained.".into());
             }
             log(
                 handle,
-                "Luma legacy Inno migration completed after MSI commit",
+                "Flux legacy Inno migration completed after MSI commit",
             );
             return Ok(());
         }
@@ -611,12 +611,12 @@ pub extern "system" fn CommitLegacy(handle: u32) -> u32 {
         reject_reparse_ancestors(std::path::Path::new(folder))?;
         legacy_original(folder)?;
         let binary = std::path::Path::new(folder)
-            .join("Luma.scr")
+            .join("Flux.scr")
             .to_string_lossy()
             .into_owned();
         probe_binary(&binary)?;
         for name in [
-            "Luma.scr",
+            "Flux.scr",
             "LICENSE",
             "deployment.ps1",
             "Install.ps1",
@@ -624,7 +624,7 @@ pub extern "system" fn CommitLegacy(handle: u32) -> u32 {
             "Uninstall.ps1",
             "Uninstall.cmd",
             "installation.json",
-            "Luma.log",
+            "Flux.log",
         ] {
             let file = std::path::Path::new(folder).join(name);
             reject_reparse_ancestors(&file)?;
@@ -638,7 +638,7 @@ pub extern "system" fn CommitLegacy(handle: u32) -> u32 {
             Err(e) if e.kind() == std::io::ErrorKind::DirectoryNotEmpty => {}
             Err(e) => return Err(e.to_string()),
         }
-        log(handle, "Luma managed ZIP installation migration completed");
+        log(handle, "Flux managed ZIP installation migration completed");
         Ok(())
     })
 }
@@ -647,7 +647,7 @@ pub extern "system" fn CommitLegacy(handle: u32) -> u32 {
 pub extern "system" fn TestSeed(handle: u32) -> u32 {
     run(handle, || {
         identity(handle)?;
-        let value = property(handle, "LUMA_TEST_SELECTION")?;
+        let value = property(handle, "FLUX_TEST_SELECTION")?;
         if !value.is_empty() {
             write(DESKTOP, SELECTION, &decode(&value)?)?;
         }
@@ -659,11 +659,11 @@ pub extern "system" fn TestSeed(handle: u32) -> u32 {
 pub extern "system" fn TestVerify(handle: u32) -> u32 {
     run(handle, || {
         identity(handle)?;
-        receipt(&property(handle, "LUMA_REPORT")?)?;
-        let restore = property(handle, "LUMA_TEST_RESTORE")?;
+        receipt(&property(handle, "FLUX_REPORT")?)?;
+        let restore = property(handle, "FLUX_TEST_RESTORE")?;
         if !restore.is_empty() {
             write(DESKTOP, SELECTION, &decode(&restore)?)?;
-            let file = property(handle, "LUMA_REPORT")?;
+            let file = property(handle, "FLUX_REPORT")?;
             if !file.is_empty() {
                 let mut report: serde_json::Value =
                     serde_json::from_slice(&std::fs::read(&file).map_err(|e| e.to_string())?)
@@ -703,7 +703,7 @@ mod tests {
     }
     #[test]
     fn string_values_require_valid_utf16_and_string_kind() {
-        assert_eq!(text(&string("Luma 🖥")).unwrap(), "Luma 🖥");
+        assert_eq!(text(&string("Flux 🖥")).unwrap(), "Flux 🖥");
         for value in [
             None,
             Some((3, vec![65, 0])),
@@ -716,16 +716,16 @@ mod tests {
     #[test]
     fn ownership_path_comparison_does_not_match_other_savers() {
         assert!(same_path(
-            "\"C:/User/Luma/Luma.scr\"",
-            "c:\\user\\luma\\luma.scr"
+            "\"C:/User/Flux/Flux.scr\"",
+            "c:\\user\\flux\\flux.scr"
         ));
         assert!(!same_path(
-            "C:/User/Luma/Luma.scr",
-            "C:/User/Luma2/Luma.scr"
+            "C:/User/Flux/Flux.scr",
+            "C:/User/Flux2/Flux.scr"
         ));
         assert!(!same_path(
-            "C:/User/Luma/Luma.scr",
-            "C:/User/Luma/Luma.scr.exe"
+            "C:/User/Flux/Flux.scr",
+            "C:/User/Flux/Flux.scr.exe"
         ));
     }
 }

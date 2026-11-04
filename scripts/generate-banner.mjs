@@ -20,11 +20,11 @@ for (let y = -12; y < 432; y += 12) {
   }
 }
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
-<title id="title">Luma — a little light, while you're away.</title>
-<desc id="desc">Luma Windows screensaver. Short teal, violet, and pink light trails form flowing Aurora vortices on black.</desc>
+<title id="title">Flux — a little light, while you're away.</title>
+<desc id="desc">Flux Windows screensaver. Short teal, violet, and pink light trails form flowing Aurora vortices on black.</desc>
 <defs><linearGradient id="aurora" gradientUnits="userSpaceOnUse" x1="460" y1="0" x2="1200" y2="420"><stop stop-color="#9171ec"/><stop offset=".5" stop-color="#ee85ba"/><stop offset="1" stop-color="#51dbba"/></linearGradient><linearGradient id="fade"><stop offset=".36" stop-color="white"/><stop offset=".54" stop-color="black"/></linearGradient><clipPath id="clip"><rect width="1200" height="420" rx="24"/></clipPath><mask id="textFade"><rect width="1200" height="420" fill="url(#fade)"/></mask></defs>
 <g clip-path="url(#clip)"><rect width="1200" height="420" fill="#080b10"/>
 <g fill="none" stroke="url(#aurora)" stroke-width="2.7" stroke-linecap="round">${paths.join('')}</g>
 <rect width="1200" height="420" fill="#080b10" mask="url(#textFade)"/>
-<g font-family="Segoe UI,Arial,sans-serif"><text x="64" y="79" fill="#b2efd9" font-size="13" letter-spacing="3">WINDOWS · OPEN SOURCE</text><text x="60" y="197" fill="#f2f5f7" font-size="94" font-weight="600" letter-spacing="-5">luma</text><text x="64" y="253" fill="#b2efd9" font-size="26">A little light, while you're away.</text><text x="64" y="338" fill="#99a6b3" font-size="16">Five palettes. Every display. Time, if you want it.</text></g></g></svg>\n`;
-writeFileSync(new URL('../docs/luma-banner.svg', import.meta.url), svg);
+<g font-family="Segoe UI,Arial,sans-serif"><text x="64" y="79" fill="#b2efd9" font-size="13" letter-spacing="3">WINDOWS · OPEN SOURCE</text><text x="60" y="197" fill="#f2f5f7" font-size="94" font-weight="600" letter-spacing="-5">flux</text><text x="64" y="253" fill="#b2efd9" font-size="26">A little light, while you're away.</text><text x="64" y="338" fill="#99a6b3" font-size="16">Five palettes. Every display. Time, if you want it.</text></g></g></svg>\n`;
+writeFileSync(new URL('../docs/flux-banner.svg', import.meta.url), svg);

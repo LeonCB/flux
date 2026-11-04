@@ -54,7 +54,7 @@ impl MouseExit {
 pub fn show_message(message: &str) {
     #[cfg(target_os = "windows")]
     {
-        let title: Vec<u16> = "Luma\0".encode_utf16().collect();
+        let title: Vec<u16> = "Flux\0".encode_utf16().collect();
         let text: Vec<u16> = message.encode_utf16().chain(Some(0)).collect();
         // Both strings are null-terminated and live until MessageBoxW returns.
         unsafe {
@@ -67,7 +67,7 @@ pub fn show_message(message: &str) {
         }
     }
     #[cfg(not(target_os = "windows"))]
-    eprintln!("Luma: {message}");
+    eprintln!("Flux: {message}");
 }
 
 #[cfg(test)]

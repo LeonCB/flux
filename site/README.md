@@ -1,4 +1,4 @@
-# Luma website
+# Flux website
 
 Static landing page for https://luma.ksmvc.ch. No npm dependencies or build step.
 The canvas is an illustrative palette study, not the Rust simulation.
@@ -7,7 +7,7 @@ The canvas is an illustrative palette study, not the Rust simulation.
 
 1. In repository Settings > Pages, select **GitHub Actions** as the source.
 2. Set **Custom domain** to `luma.ksmvc.ch` and save.
-3. At the DNS provider create a CNAME record: `luma` -> `ken5998.github.io`.
+3. At the DNS provider create a CNAME record: `flux` -> `ken5998.github.io`.
 4. Once GitHub's DNS check and certificate provisioning complete, enable **Enforce HTTPS**.
 5. Publish the stable release before deploying its version text, then push to
    main or run the workflow manually. The workflow builds and tests the Windows
@@ -23,7 +23,7 @@ resolve a published stable release before the site is deployed.
 
 The CNAME file documents the intended domain, but custom workflows still require
 setting the domain in GitHub Pages settings. Do not point the DNS CNAME at a URL
-or at `ken5998.github.io/luma`.
+or at `ken5998.github.io/flux`.
 
 Documentation: https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site
 

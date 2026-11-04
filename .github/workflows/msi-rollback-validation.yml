@@ -30,7 +30,7 @@ jobs:
       - name: Build isolated file-only MSI
         run: |
           . ./scripts/Msi.Common.ps1
-          $wix = Get-LumaWix
+          $wix = Get-FluxWix
           $package = ./scripts/test-msi-rollback-probe.ps1 -WixPath $wix.Compiler -BuildOnly
           $portable = Join-Path $PWD 'target/standard-user-probe'
           $null = New-Item -ItemType Directory -Path $portable

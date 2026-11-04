@@ -1,18 +1,18 @@
-Luma for Windows
+Flux for Windows
 ================
 
 Install or update
 -----------------
 1. Extract this ZIP to a folder (do not run Install from inside the ZIP).
-2. Close Luma and Windows Screen Saver Settings.
+2. Close Flux and Windows Screen Saver Settings.
 3. Double-click Install.cmd. No administrator rights are needed.
-4. Windows Screen Saver Settings opens. Check that Luma is selected,
+4. Windows Screen Saver Settings opens. Check that Flux is selected,
    choose your wait time and sign-in preference, then click Apply.
 
-The package installs to %LOCALAPPDATA%\Luma\Screensaver.
+The package installs to %LOCALAPPDATA%\Flux\Screensaver.
 Run Install.cmd again from a newer extracted package to update.
 Your palette, speed, size, and quality preferences are preserved.
-The installer selects Luma but does not alter the activation setting,
+The installer selects Flux but does not alter the activation setting,
 wait time, or password requirement. Review these in the Windows panel.
 
 Switching from an installer
@@ -24,20 +24,20 @@ an MSI through Windows Installed Apps before switching to ZIP.
 
 Configure
 ---------
-Click Settings in Windows Screen Saver Settings to change Luma's appearance.
+Click Settings in Windows Screen Saver Settings to change Flux's appearance.
 Changes apply when the next screensaver or preview instance starts.
 
 Uninstall
 ---------
 Double-click Uninstall.cmd, either in this package or in the installation
-folder. Close Luma and Windows Screen Saver Settings first.
-The previous screensaver is restored if still available and Luma is still
+folder. Close Flux and Windows Screen Saver Settings first.
+The previous screensaver is restored if still available and Flux is still
 selected. If you selected a different saver, that choice is left alone.
-Preferences in %LOCALAPPDATA%\Luma\settings.json are kept.
+Preferences in %LOCALAPPDATA%\Flux\settings.json are kept.
 
 Existing manual installation
 ----------------------------
-A manually copied Luma.scr is not removed by this installer. The new
+A manually copied Flux.scr is not removed by this installer. The new
 per-user copy is selected instead. You may remove the old copy separately.
 
 Notes
@@ -48,5 +48,5 @@ This package does not bypass organization screen saver policies.
 The SHA256SUMS.txt file can detect accidental package corruption; it is
 not a digital signature and does not establish the publisher's identity.
 
-Source: https://github.com/Ken5998/luma
-Based on Flux by Sander Melnikov. See LICENSE for the MIT license.
+Source: https://github.com/LeonCB/flux
+Based on Luma by Kenan Kasumović and Flux by Sander Melnikov. See LICENSE for the MIT license.

@@ -6,7 +6,7 @@ param(
     [switch] $ReportOnly
 )
 . "$PSScriptRoot/virustotal-common.ps1"
-Assert-LumaReleaseTag $Tag
+Assert-FluxReleaseTag $Tag
 if ($Repository -notmatch '\A[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+\z') { throw 'Invalid repository name.' }
 if ([string]::IsNullOrWhiteSpace($env:VT_API_KEY)) { throw 'Configure the VT_API_KEY repository secret before scanning.' }
 $null = Get-Command gh -ErrorAction Stop
@@ -14,7 +14,7 @@ $version = $Tag.Substring(1)
 $directory = Join-Path (Split-Path $PSScriptRoot -Parent) ('target/virustotal/' + [Guid]::NewGuid().ToString('N'))
 $null = New-Item -ItemType Directory -Path $directory
 
-gh release download $Tag --repo $Repository --dir $directory --pattern "Luma-$version-Setup-x64.*" --pattern "Luma-$version-windows-x64.zip" --pattern SHA256SUMS.txt
+gh release download $Tag --repo $Repository --dir $directory --pattern "Flux-$version-Setup-x64.*" --pattern "Flux-$version-windows-x64.zip" --pattern SHA256SUMS.txt
 if ($LASTEXITCODE -ne 0) { throw 'Could not download all final release assets.' }
 $json = gh release view $Tag --repo $Repository --json body
 if ($LASTEXITCODE -ne 0) { throw 'Could not read release notes.' }

@@ -4,7 +4,7 @@ const colors = {Aurora:['#51dbba','#9171ec','#ee85ba'],Original:['#8b98f0','#dd8
 let palette='Aurora', time=0, previous=0, raf=0, width=600, height=540;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 let paused = reduced.matches;
-// A regular field of short, tapered trails echoes Luma's line renderer.
+// A regular field of short, tapered trails echoes Flux's line renderer.
 // Spatial color interpolation keeps neighboring lines in the same color band.
 const ramps = Object.fromEntries(Object.entries(colors).map(([name, stops]) => [name,
  stops.map(hex => [1,3,5].map(offset => parseInt(hex.slice(offset,offset+2),16)))

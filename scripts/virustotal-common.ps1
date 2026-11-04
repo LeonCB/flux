@@ -1,24 +1,24 @@
 # Shared helpers for scanning public, final release assets. Requires PowerShell 7.
 $ErrorActionPreference = 'Stop'
 
-function Assert-LumaReleaseTag([string] $Tag) {
+function Assert-FluxReleaseTag([string] $Tag) {
     if ($Tag -cnotmatch '\Av(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?\z') {
         throw 'Expected a release tag such as v0.1.0.'
     }
 }
 
-function Get-LumaScanAssets([string] $Directory, [string] $Tag, [string[]] $AdditionalFiles = @()) {
-    Assert-LumaReleaseTag $Tag
+function Get-FluxScanAssets([string] $Directory, [string] $Tag, [string[]] $AdditionalFiles = @()) {
+    Assert-FluxReleaseTag $Tag
     $version = $Tag.Substring(1)
     $checksums = @(Get-Content -LiteralPath (Join-Path $Directory 'SHA256SUMS.txt'))
     # Validate BOTH files before uploading either one.
     foreach ($name in $AdditionalFiles) {
-        if ($name -cnotin @('Luma.scr', 'luma-install-helper.exe')) { throw 'Unexpected diagnostic artifact name.' }
+        if ($name -cnotin @('Flux.scr', 'flux-install-helper.exe')) { throw 'Unexpected diagnostic artifact name.' }
     }
-    $installerNames = @("Luma-$version-Setup-x64.exe", "Luma-$version-Setup-x64.msi")
+    $installerNames = @("Flux-$version-Setup-x64.exe", "Flux-$version-Setup-x64.msi")
     $installerEntries = @($installerNames | Where-Object { $candidate = $_; @($checksums | Where-Object { $_ -cmatch ('\A[0-9a-fA-F]{64}  ' + [regex]::Escape($candidate) + '\z') }).Count -gt 0 })
     if ($installerEntries.Count -ne 1) { throw 'Checksums must identify exactly one installer (EXE or MSI).' }
-    $assets = foreach ($name in (@($installerEntries[0], "Luma-$version-windows-x64.zip") + $AdditionalFiles)) {
+    $assets = foreach ($name in (@($installerEntries[0], "Flux-$version-windows-x64.zip") + $AdditionalFiles)) {
         $file = Get-Item -LiteralPath (Join-Path $Directory $name)
         if ($file.PSIsContainer -or $file.Length -eq 0 -or $file.Length -gt 650MB) {
             throw "Invalid release artifact size: $name."
@@ -35,7 +35,7 @@ function Get-LumaScanAssets([string] $Directory, [string] $Tag, [string[]] $Addi
 
 function New-VirusTotalMultipart([IO.FileInfo] $File) {
     # Explicit headers match the large-file parser; stream the original bytes.
-    $boundary = 'Luma' + [Guid]::NewGuid().ToString('N')
+    $boundary = 'Flux' + [Guid]::NewGuid().ToString('N')
     $multipart = [Net.Http.MultipartFormDataContent]::new($boundary)
     try {
         $content = [Net.Http.StreamContent]::new($File.OpenRead())
@@ -88,8 +88,8 @@ function Get-VirusTotalAnalysisId([string] $Notes, $Asset) {
 }
 
 function Merge-VirusTotalNotes([string] $Body, [string] $Report) {
-    $start = '<!-- luma-virustotal:start -->'
-    $end = '<!-- luma-virustotal:end -->'
+    $start = '<!-- flux-virustotal:start -->'
+    $end = '<!-- flux-virustotal:end -->'
     $hasStart = $Body.Contains($start)
     $hasEnd = $Body.Contains($end)
     if ($hasStart -or $hasEnd) {

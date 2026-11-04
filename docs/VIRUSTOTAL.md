@@ -1,8 +1,8 @@
 # VirusTotal release reports
 
 The **Scan release with VirusTotal** GitHub Actions workflow scans the final
-`Luma-<version>-Setup-x64.msi` (or the historical EXE) and
-`Luma-<version>-windows-x64.zip` attached to a
+`Flux-<version>-Setup-x64.msi` (or the historical EXE) and
+`Flux-<version>-windows-x64.zip` attached to a
 GitHub release. Configure `VT_API_KEY` as a repository Actions secret. The key is
 passed only to the scanning step and is never written to reports.
 
@@ -70,7 +70,7 @@ scans the candidate and saves reports as Actions artifacts without changing the
 published release. See [installer investigation](INSTALLER-TRUST.md).
 
 For this comparison, unchanged files reuse matching recorded analysis IDs;
-diagnostic scans include `Luma.scr` and `luma-install-helper.exe` as individual
+diagnostic scans include `Flux.scr` and `flux-install-helper.exe` as individual
 files, each verified against the candidate checksums. The normal release workflow
 still scans its two published packages. Neither workflow treats a detection as
 an automatic false positive.

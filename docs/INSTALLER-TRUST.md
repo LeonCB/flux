@@ -39,7 +39,7 @@ reporting improvements and registered-uninstaller lookup are integrated on
 The old setup extracted PowerShell scripts to a temporary directory and ran
 them hidden with `-ExecutionPolicy Bypass` for preparation and uninstall.
 Those actions only needed local file checks, JSON metadata and the current
-user's screensaver registry value. The new `luma-installer` Rust helper performs
+user's screensaver registry value. The new `flux-installer` Rust helper performs
 those same limited operations directly, with no shell, interpreter, network,
 downloads or elevation. The graphical setup no longer ships those legacy
 PowerShell action files. The ZIP install scripts and the application's existing
@@ -73,7 +73,7 @@ The existing public release is not replaced during this investigation.
 
 ### Native helper with compressed setup
 
-[Run 35108620453](https://github.com/Ken5998/luma/actions/runs/35108620453)
+[Run 35108620453](https://github.com/LeonCB/flux/actions/runs/35108620453)
 passed all six helper unit tests and the graphical install, update, uninstall,
 and ZIP migration checks. Candidate SHA-256:
 `be6f1319fe648f5522811275e2f7beeddcc00f892364d869c0347b967b7d5936`.
@@ -90,21 +90,21 @@ submitted normally; actual API failures remain visible.
 
 ### Uncompressed setup and component isolation
 
-[Run 35109485218](https://github.com/Ken5998/luma/actions/runs/35109485218)
+[Run 35109485218](https://github.com/LeonCB/flux/actions/runs/35109485218)
 passed the helper tests, install/update/uninstall/ZIP migration checks, and an
 upgrade from the actual v0.1.0 graphical installer followed by uninstall.
-It separately scans the setup, exact original `Luma.scr`, and native helper,
+It separately scans the setup, exact original `Flux.scr`, and native helper,
 and refreshes the unchanged ZIP's recorded analysis. The workflow succeeded.
 
 Subsequent component reports observed on 2026-09-16:
 
 | Component | SHA-256 | Result |
 | --- | --- | --- |
-| Original `Luma.scr` | `d85ff71abb7de287da02acdb7d159bb6c7da302d6c8d42b0b6bf56012c458ffc` | 1/70, SecureAge: Malicious |
+| Original `Flux.scr` | `d85ff71abb7de287da02acdb7d159bb6c7da302d6c8d42b0b6bf56012c458ffc` | 1/70, SecureAge: Malicious |
 | Experimental native helper | `d8ec0d787424f453ff6fba381a835a6ff9b40ff02cc4dfb4d4bf922f9832c19d` | 1/68, Bkav Pro: W32.Malware.F72E07D5; DeepInstinct failed, Google timed out |
 | Uncompressed experimental setup | `05840dab034bfc719890016f372034e8e3774552160ce6cfc66946479cd2a73c` | Initially pending; completed API results below |
 
-[Report refresh 35111623941](https://github.com/Ken5998/luma/actions/runs/35111623941)
+[Report refresh 35111623941](https://github.com/LeonCB/flux/actions/runs/35111623941)
 retrieved the recorded analysis IDs at 14:53 UTC. Its downloadable JSON preserves
 the hashes, analysis IDs, engine versions, signatures and counts:
 
@@ -138,7 +138,7 @@ ask for that determination. SecureAge received both original samples on
 also emailed that day. Both vendor reviews remain pending.
 
 The integrated reporting and uninstall-handoff changes passed the full
-[main build 35111478116](https://github.com/Ken5998/luma/actions/runs/35111478116),
+[main build 35111478116](https://github.com/LeonCB/flux/actions/runs/35111478116),
 including the dedicated PowerShell regression tests.
 
 Generic classifications cannot establish the exact cause. A new file also has

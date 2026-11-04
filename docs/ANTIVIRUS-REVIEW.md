@@ -9,25 +9,25 @@ source, checksums and VirusTotal report links. Vendor review is pending.
 
 ## SecureAge
 
-Subject: Classification review request — Luma open-source Windows screensaver
+Subject: Classification review request — Flux open-source Windows screensaver
 
 Please review the generic `Malicious` classifications for these public files:
 
-- Released installer `Luma-0.1.0-Setup-x64.exe`, SHA-256
+- Released installer `Flux-0.1.0-Setup-x64.exe`, SHA-256
   `e0361bffc45347e45bb9721e07adb88c6fbd5556e9e164c7264f3b2a19861fe4`.
 - The exact screensaver extracted from the checksum-verified v0.1.0 ZIP,
-  `Luma.scr`, SHA-256
+  `Flux.scr`, SHA-256
   `d85ff71abb7de287da02acdb7d159bb6c7da302d6c8d42b0b6bf56012c458ffc`.
 
-Source: https://github.com/Ken5998/luma
+Source: https://github.com/LeonCB/flux
 
-Public release and checksums: https://github.com/Ken5998/luma/releases/tag/v0.1.0
+Public release and checksums: https://github.com/LeonCB/flux/releases/tag/v0.1.0
 
 Reports:
 https://www.virustotal.com/gui/file/e0361bffc45347e45bb9721e07adb88c6fbd5556e9e164c7264f3b2a19861fe4/detection
 https://www.virustotal.com/gui/file/d85ff71abb7de287da02acdb7d159bb6c7da302d6c8d42b0b6bf56012c458ffc/detection
 
-Luma is an MIT-licensed Windows screensaver based on Flux. It renders animated
+Flux is an MIT-licensed Windows screensaver based on Luma and the original Flux. It renders animated
 graphics and offers a settings dialog. The v0.1.0 installer is an unsigned
 Inno Setup package that installs for the current user and sets that user's
 `Control Panel\Desktop\SCRNSAVE.EXE` selection. It preserves the previous choice
@@ -50,9 +50,9 @@ https://www.secureage.com/contact-us
 
 ## DeepInstinct
 
-Subject: Classification review request — unsigned Luma Inno Setup installer
+Subject: Classification review request — unsigned Flux Inno Setup installer
 
-Please review `Luma-0.1.0-Setup-x64.exe`, SHA-256
+Please review `Flux-0.1.0-Setup-x64.exe`, SHA-256
 `e0361bffc45347e45bb9721e07adb88c6fbd5556e9e164c7264f3b2a19861fe4`,
 classified as `MALICIOUS` in VirusTotal.
 

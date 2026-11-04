@@ -1,5 +1,5 @@
 // A common module to handle anything and everything pseudo-random that happens
-// in Luma.
+// in Flux.
 //
 // We want to have the option of seeding our RNGs to generate determentistic
 // output for testing.
@@ -12,7 +12,7 @@ use std::cell::RefCell;
 use std::thread_local;
 
 thread_local!(
-    static LUMA_RNG: RefCell<Pcg32> = {
+    static FLUX_RNG: RefCell<Pcg32> = {
         let rng = Pcg32::from_rng(&mut rand::rng());
         RefCell::new(rng)
     }
@@ -27,12 +27,12 @@ pub fn init_from_seed(optional_seed: &Option<String>) {
             .collect()
     });
 
-    LUMA_RNG.with(|rng| rng.replace(Seeder::from(seed).into_rng()));
+    FLUX_RNG.with(|rng| rng.replace(Seeder::from(seed).into_rng()));
 }
 
 pub fn gen<T>() -> T
 where
     StandardUniform: Distribution<T>,
 {
-    LUMA_RNG.with(|rng| rng.borrow_mut().random::<T>())
+    FLUX_RNG.with(|rng| rng.borrow_mut().random::<T>())
 }
