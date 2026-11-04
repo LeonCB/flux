@@ -1,0 +1,2 @@
+// Application icon shown by Windows Explorer for Flux.exe and Flux.scr.
+1 ICON "../packaging/windows/Flux.ico"

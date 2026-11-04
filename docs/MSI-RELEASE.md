@@ -20,11 +20,12 @@ MSI installs in `%LOCALAPPDATA%\Flux\MSI`, without administrator rights or UAC.
 It has a separate upgrade family from the experimental prototype/candidate:
 `A51E59BE-C086-48C8-8BDA-B382C44316AE`. Test hooks are absent from production.
 WiX and its UI extension are pinned at 6.0.2; the native DLL uses a static CRT.
-Windows Installed Apps and Programs and Features use an embedded `Flux.ico`,
-derived from the site's existing `site/icon.svg`, through `ARPPRODUCTICON` and
-the MSI Icon table. Windows Installer caches the icon; it does not add a third
-payload file or require rebuilding the screensaver. Regenerate the multi-size
-ICO with `./scripts/generate-windows-icon.ps1` when the site symbol changes.
+Windows Installed Apps and Programs and Features use an embedded `Flux.ico`
+through `ARPPRODUCTICON` and the MSI Icon table. Windows Installer caches the
+icon; it does not add a third payload file. The same `Flux.ico` is compiled into
+`Flux.exe` and `Flux.scr` (`flux-desktop/flux.rc`) so Explorer shows it. It is a
+custom pixel-art icon; do not run `./scripts/generate-windows-icon.ps1`, which
+would overwrite it with a rendering of `site/icon.svg`.
 Already installed copies receive the icon when updated with a newer MSI.
 The [WiX maintenance-fee policy](https://docs.firegiant.com/wix/whatsnew/)
 requires payment for revenue-generating use; Flux is an individual, noncommercial
