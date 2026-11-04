@@ -21,6 +21,9 @@ $directory = Join-Path ([IO.Path]::GetTempPath()) ('flux-vt-test-' + [Guid]::New
 $null = New-Item -ItemType Directory -Path $directory
 $oldKey = $env:VT_API_KEY
 $env:VT_API_KEY = 'offline-test-secret'
+# Keep fixture reports out of the real GitHub Actions job summary.
+$oldSummary = $env:GITHUB_STEP_SUMMARY
+$env:GITHUB_STEP_SUMMARY = $null
 $global:fluxVtTestScenario = 'completed'
 $global:fluxVtTestCalls = [Collections.Generic.List[object]]::new()
 $global:fluxVtTestSleeps = [Collections.Generic.List[int]]::new()
@@ -183,6 +186,7 @@ try {
     Write-Output 'PASS: syntax, tags, exact asset hashes, multipart bytes, completed/pending/malformed reports, refresh-only, throttling/retries, safe diagnostics, end-to-end release note updates, large uploads, and missing key.'
 } finally {
     $env:VT_API_KEY = $oldKey
+    $env:GITHUB_STEP_SUMMARY = $oldSummary
     Remove-Variable -Name fluxVtTestCalls,fluxVtTestSleeps,fluxVtTestScenario -Scope Global
     if ($global:fluxVtTestGitHub.Directory) {
         foreach ($name in @('Flux-0.1.0-Setup-x64.exe', 'Flux-0.1.0-windows-x64.zip', 'SHA256SUMS.txt', 'virustotal.md', 'virustotal-results.json', 'release-notes.md')) {
