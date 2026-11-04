@@ -6,7 +6,7 @@ A Windows screensaver with flowing, GPU-rendered light. Based on [Luma by Kenan 
 
 Flux is an independent MIT-licensed fork, currently under development.
 
-[Website](https://luma.ksmvc.ch) · [Releases](https://github.com/LeonCB/flux/releases)
+[Releases](https://github.com/LeonCB/flux/releases)
 
 ## Features
 
@@ -203,14 +203,9 @@ Losing focus does not close the screensaver.
 ## Roadmap and current limits
 
 - Display hot-plug handling; restart Flux after connecting or disconnecting a monitor.
-- Custom application icon.
 - Performance tuning for multiple high-resolution displays. Each display currently owns a separate simulation and GPU context; scenes do not span display boundaries.
 
 Both graphical and script-based per-user installers are available.
-
-## Website
-
-The English landing page lives in [`site/`](site/README.md), with interactive palette illustrations and an optional clock preview. The GitHub Actions workflow builds and tests the Windows package, then publishes the site through GitHub Pages. Download buttons open the latest stable GitHub release page, where users can choose MSI or ZIP and read the uninstall rollback note. A documentation update does not replace a released binary. See the [deployment instructions](site/README.md) for the custom domain `luma.ksmvc.ch`.
 
 ## Repository structure
 
@@ -218,7 +213,6 @@ The English landing page lives in [`site/`](site/README.md), with interactive pa
 | --- | --- |
 | `flux/` | GPU renderer, shaders, and simulation tests |
 | `flux-desktop/` | Windows screensaver, settings, clock, and desktop tests |
-| `site/` | Published website and interactive illustration |
 | `scripts/` | Build, package, and Windows integration checks |
 | `packaging/windows/` | Per-user installer and uninstaller |
 | `docs/` | Artwork, release preparation and validation evidence |

@@ -1,4 +1,4 @@
-name: Build Windows package and deploy website
+name: Build and test Windows package
 on:
   push:
     branches: [main]
@@ -6,7 +6,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: pages
+  group: build-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   windows:
@@ -32,22 +32,3 @@ jobs:
           path: |
             target/distribution/Flux-windows-x64.zip
             target/distribution/Flux-windows-x64.zip.sha256
-  pages:
-    needs: windows
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/configure-pages@v6
-      - uses: actions/upload-pages-artifact@v5
-        with:
-          path: site
-      - name: Publish
-        id: deployment
-        uses: actions/deploy-pages@v5

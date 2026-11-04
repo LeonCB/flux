@@ -8,7 +8,7 @@ description = "Flux Windows screensaver, based on Luma and the original Flux by 
 edition = "2021"
 license = "MIT"
 license-file = "LICENSE"
-homepage = "https://luma.ksmvc.ch"
+homepage = "https://github.com/LeonCB/flux"
 repository = "https://github.com/LeonCB/flux"
 authors = ["Kenan Kasumović", "Sander Melnikov <hey@sandydoo.me>"]
 

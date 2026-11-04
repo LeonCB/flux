@@ -5,7 +5,7 @@
     <MajorUpgrade DowngradeErrorMessage="A newer Flux MSI candidate is already installed." Schedule="afterInstallExecute" />
     <MediaTemplate EmbedCab="yes" />
     <Launch Condition="Installed OR NOT RollbackDisabled" Message="Enable Windows Installer rollback before installing Flux." />
-    <Property Id="ARPURLINFOABOUT" Value="https://luma.ksmvc.ch" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/LeonCB/flux" />
     <StandardDirectory Id="LocalAppDataFolder">
       <Directory Id="FluxFolder" Name="Flux">
         <Component Id="ParentFolderCleanup" Guid="8C41CB66-D40C-4F79-BEA5-B177C20BA60B">

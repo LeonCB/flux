@@ -1,7 +1,4 @@
 # Rust build output and local test artifacts
 /target/
 
-# Download populated by the Pages workflow or local packaging
-/site/downloads/
-
 /packaging/windows/msi/target/

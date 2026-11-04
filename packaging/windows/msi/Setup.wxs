@@ -7,7 +7,7 @@
     <Launch Condition="Installed OR VersionNT64" Message="Flux requires 64-bit Windows." />
     <Launch Condition="Installed OR NOT RollbackDisabled" Message="Enable Windows Installer rollback before installing Flux." />
     <Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" />
-    <Property Id="ARPURLINFOABOUT" Value="https://luma.ksmvc.ch" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/LeonCB/flux" />
     <Icon Id="FluxAppIcon.ico" SourceFile="$(var.Icon)" />
     <Property Id="ARPPRODUCTICON" Value="FluxAppIcon.ico" />
     <StandardDirectory Id="LocalAppDataFolder">
