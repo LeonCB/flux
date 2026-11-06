@@ -1,0 +1,4 @@
+// Application icon shown by Windows Explorer for Flux.exe and Flux.scr.
+1 ICON "Flux.ico"
+// Common Controls v6 and DPI awareness (RT_MANIFEST = 24).
+1 24 "flux.manifest"

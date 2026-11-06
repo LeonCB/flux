@@ -1,0 +1,31 @@
+[package]
+name = "flux-desktop"
+version.workspace = true
+description.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+publish = false
+build = "build.rs"
+
+[[bin]]
+name = "Flux"
+path = "src/main.rs"
+
+[dependencies]
+env_logger.workspace = true
+flux.workspace = true
+log.workspace = true
+pollster.workspace = true
+raw-window-handle.workspace = true
+serde_json.workspace = true
+serde.workspace = true
+# Direct3D 12 only; Microsoft's WARP software renderer covers systems
+# without a DirectX 12 GPU.
+wgpu = { workspace = true, features = ["dx12"] }
+winit.workspace = true
+windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_System_LibraryLoader", "Win32_System_Power", "Win32_UI_HiDpi", "Win32_UI_Input_KeyboardAndMouse", "Win32_UI_WindowsAndMessaging"] }
+
+[build-dependencies]
+embed-resource = "3"

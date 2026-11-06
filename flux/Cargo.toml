@@ -1,0 +1,28 @@
+[package]
+name = "flux"
+version.workspace = true
+description.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+publish = false
+
+[dependencies]
+approx.workspace = true
+bytemuck.workspace = true
+getrandom.workspace = true
+glam.workspace = true
+half.workspace = true
+log.workspace = true
+rand.workspace = true
+rand_pcg.workspace = true
+rand_seeder.workspace = true
+rustc-hash.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+wgpu.workspace = true
+
+[dev-dependencies]
+pollster.workspace = true
+wgpu = { workspace = true, features = ["dx12"] } # backend for the GPU tests

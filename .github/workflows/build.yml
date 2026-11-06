@@ -1,0 +1,26 @@
+name: Build and test
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Rust
+        run: rustup default stable
+      - name: Test
+        run: cargo test --locked --release -p flux -p flux-desktop
+      - name: Build Flux.exe
+        run: cargo build --locked --release -p flux-desktop
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Flux
+          path: target/release/Flux.exe

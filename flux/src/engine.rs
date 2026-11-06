@@ -1,0 +1,418 @@
+use crate::{grid, render, rng, settings};
+use settings::Settings;
+
+use std::sync::Arc;
+
+// The time at which the animation timer will reset to zero.
+const MAX_ELAPSED_TIME: f32 = 1000.0;
+const MAX_FRAME_TIME: f32 = 1.0 / 10.0;
+
+/// Optional GPU capabilities discovered at device-creation time.
+///
+/// Flux relies on a small handful of optional wgpu features for its fast paths
+/// and falls back to widely-supported alternatives when they aren't available.
+/// The host (desktop or web) is responsible for probing the adapter and
+/// constructing this struct.
+#[derive(Copy, Clone, Debug)]
+pub struct BackendCaps {
+    /// Whether `wgpu::Features::FLOAT32_FILTERABLE` was enabled on the device.
+    /// Without it, linearly sampled noise uses Rgba16Float. Pressure always
+    /// uses R32Float with unfiltered integer reads to preserve solver precision.
+    pub float32_filterable: bool,
+}
+
+pub struct Flux {
+    settings: Arc<Settings>,
+    logical_size: wgpu::Extent3d,
+    physical_size: wgpu::Extent3d,
+
+    grid: grid::Grid,
+    fluid: render::fluid::Context,
+    pub lines: render::lines::Context,
+    noise_generator: render::noise::NoiseGenerator,
+    debug_texture: render::texture::Context,
+
+    // A timestamp in milliseconds. Either host or video time.
+    last_timestamp: f64,
+
+    // A local animation timer in seconds that resets at MAX_ELAPSED_TIME.
+    elapsed_time: f32,
+
+    fluid_frame_time: f32,
+}
+
+impl Flux {
+    pub fn update(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, settings: &Arc<Settings>) {
+        let fluid_size_changed = self.settings.fluid_size != settings.fluid_size;
+        let scale_changed = self.settings.overall_scale() != settings.overall_scale();
+        let spacing_changed = self.settings.grid_spacing != settings.grid_spacing || scale_changed;
+        self.settings = Arc::clone(settings);
+
+        if spacing_changed {
+            self.grid = grid::Grid::with_scale(
+                self.logical_size.width,
+                self.logical_size.height,
+                self.settings.grid_spacing,
+                self.settings.overall_scale(),
+            );
+        }
+        // Overall size changes the visible world, independently of texture detail.
+        if fluid_size_changed || scale_changed {
+            self.resize_fields(device, queue);
+        }
+
+        self.fluid.update(queue, &self.settings);
+        self.noise_generator.update(&self.settings);
+
+        if spacing_changed {
+            self.lines
+                .resize(device, queue, self.logical_size, &self.grid, &self.settings);
+        } else {
+            self.lines
+                .update(device, queue, self.logical_size, &self.grid, &self.settings);
+        }
+    }
+
+    pub fn sample_colors_from_texture_view(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        texture_view: wgpu::TextureView,
+    ) {
+        self.lines
+            .update_color_bindings(device, queue, Some(texture_view), None);
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        swapchain_format: wgpu::TextureFormat,
+        logical_width: u32,
+        logical_height: u32,
+        physical_width: u32,
+        physical_height: u32,
+        caps: BackendCaps,
+        settings: &Arc<Settings>,
+    ) -> Result<Flux, String> {
+        if logical_width == 0 || logical_height == 0 || physical_width == 0 || physical_height == 0
+        {
+            return Err("Flux requires nonzero logical and backing dimensions".into());
+        }
+        log::info!("✨ Initialising Flux");
+
+        rng::init_from_seed(&settings.seed);
+
+        let logical_size = wgpu::Extent3d {
+            width: logical_width,
+            height: logical_height,
+            depth_or_array_layers: 1,
+        };
+        let physical_size = wgpu::Extent3d {
+            width: physical_width,
+            height: physical_height,
+            depth_or_array_layers: 1,
+        };
+
+        log::info!("📐 Logical size: {}x{}", logical_width, logical_height);
+        log::info!("📏 Physical size: {}x{}", physical_width, physical_height);
+
+        let grid = grid::Grid::with_scale(
+            logical_width,
+            logical_height,
+            settings.grid_spacing,
+            settings.overall_scale(),
+        );
+
+        let fluid = render::fluid::Context::new(device, queue, grid.scaling_ratio, caps, settings);
+
+        let lines = render::lines::Context::new(
+            device,
+            queue,
+            swapchain_format,
+            logical_size,
+            &grid,
+            settings,
+        );
+
+        let mut noise_generator_builder = render::noise::NoiseGeneratorBuilder::new(
+            settings.fluid_size.saturating_mul(2),
+            grid.scaling_ratio,
+            settings,
+        );
+        settings.noise_channels.iter().for_each(|channel| {
+            noise_generator_builder.add_channel(channel);
+        });
+        let noise_generator = noise_generator_builder.build(device, queue, caps);
+
+        let debug_texture = render::texture::Context::new(
+            device,
+            swapchain_format,
+            &[
+                ("fluid", fluid.get_velocity_texture_view()),
+                ("noise", noise_generator.get_noise_texture_view()),
+                ("pressure", fluid.get_pressure_texture_view()),
+                ("divergence", fluid.get_divergence_texture_view()),
+            ],
+        );
+
+        Ok(Flux {
+            settings: Arc::clone(settings),
+            logical_size,
+            physical_size,
+
+            fluid,
+            grid,
+            lines,
+            noise_generator,
+            debug_texture,
+
+            last_timestamp: 0.0,
+            elapsed_time: 0.0,
+
+            fluid_frame_time: 0.0,
+        })
+    }
+
+    pub fn resize(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        logical_width: u32,
+        logical_height: u32,
+        physical_width: u32,
+        physical_height: u32,
+    ) {
+        // Hosts suspend minimized/hidden surfaces. Keep the last valid scene
+        // if an embedding host nevertheless forwards an empty resize.
+        if logical_width == 0 || logical_height == 0 || physical_width == 0 || physical_height == 0
+        {
+            return;
+        }
+        self.physical_size = wgpu::Extent3d {
+            width: physical_width,
+            height: physical_height,
+            depth_or_array_layers: 1,
+        };
+        if self.logical_size.width == logical_width && self.logical_size.height == logical_height {
+            // A backing-scale change only changes rasterization sharpness.
+            return;
+        }
+        let grid = grid::Grid::with_scale(
+            logical_width,
+            logical_height,
+            self.settings.grid_spacing,
+            self.settings.overall_scale(),
+        );
+
+        let logical_size = wgpu::Extent3d {
+            width: logical_width,
+            height: logical_height,
+            depth_or_array_layers: 1,
+        };
+        self.lines
+            .resize(device, queue, logical_size, &grid, &self.settings);
+
+        self.grid = grid;
+        self.logical_size = logical_size;
+
+        self.resize_fields(device, queue);
+    }
+
+    /// Update the fluid/noise world domain and bounded simulation resolution.
+    /// Debug views must follow any replaced textures.
+    fn resize_fields(&mut self, device: &wgpu::Device, queue: &wgpu::Queue) {
+        self.fluid
+            .resize(device, queue, self.grid.scaling_ratio, &self.settings);
+        self.noise_generator.resize(
+            device,
+            self.settings.fluid_size.saturating_mul(2),
+            self.grid.scaling_ratio,
+        );
+        self.debug_texture.set_texture_views(
+            device,
+            &[
+                ("fluid", self.fluid.get_velocity_texture_view()),
+                ("noise", self.noise_generator.get_noise_texture_view()),
+                ("pressure", self.fluid.get_pressure_texture_view()),
+                ("divergence", self.fluid.get_divergence_texture_view()),
+            ],
+        );
+    }
+
+    pub fn animate(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        encoder: &mut wgpu::CommandEncoder,
+        view: &wgpu::TextureView,
+        screen_viewport: Option<render::ScreenViewport>,
+        timestamp: f64,
+    ) {
+        self.compute(device, queue, encoder, timestamp);
+        self.render(device, queue, encoder, view, screen_viewport);
+    }
+
+    pub fn compute(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        encoder: &mut wgpu::CommandEncoder,
+        timestamp: f64,
+    ) {
+        // The delta time in seconds
+        let timestep = f32::min(
+            MAX_FRAME_TIME,
+            0.001 * (timestamp - self.last_timestamp) as f32,
+        );
+
+        self.last_timestamp = timestamp;
+        self.elapsed_time += timestep;
+        self.fluid_frame_time += timestep;
+
+        // Reset animation timers to avoid precision issues
+        let timer_overflow = self.elapsed_time - MAX_ELAPSED_TIME;
+        if timer_overflow >= 0.0 {
+            self.elapsed_time = timer_overflow;
+        }
+
+        let fluid_update_interval = 1.0 / self.settings.fluid_frame_rate;
+        self.noise_generator.begin_frame();
+        while self.fluid_frame_time >= fluid_update_interval {
+            self.noise_generator.update_buffers(
+                device,
+                queue,
+                encoder,
+                self.settings.fluid_timestep,
+            );
+
+            let mut cpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+                label: Some("flux::compute"),
+                timestamp_writes: None,
+            });
+
+            self.noise_generator.generate(&mut cpass);
+
+            self.fluid.advect_forward(queue, &mut cpass);
+            self.fluid.advect_reverse(queue, &mut cpass);
+            self.fluid.adjust_advection(&mut cpass);
+            self.fluid.diffuse(&mut cpass);
+
+            let velocity_bind_group = self.fluid.get_write_velocity_bind_group();
+            self.noise_generator.inject_noise_into(
+                &mut cpass,
+                velocity_bind_group,
+                self.fluid.get_fluid_size(),
+            );
+
+            self.fluid.calculate_divergence(&mut cpass);
+            self.fluid.solve_pressure(queue, &mut cpass);
+            self.fluid.subtract_gradient(&mut cpass);
+
+            self.fluid_frame_time -= fluid_update_interval;
+        }
+
+        {
+            self.lines
+                .tick_line_uniforms(device, queue, timestep, self.elapsed_time);
+
+            let mut cpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+                label: Some("flux::place_lines"),
+                timestamp_writes: None,
+            });
+
+            self.lines
+                .place_lines(&mut cpass, self.fluid.get_read_velocity_bind_group());
+        }
+    }
+
+    pub fn render(
+        &self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        encoder: &mut wgpu::CommandEncoder,
+        view: &wgpu::TextureView,
+        screen_viewport: Option<render::ScreenViewport>,
+    ) {
+        encoder.push_debug_group("render lines");
+
+        {
+            let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("flux::render"),
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view,
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
+                        store: wgpu::StoreOp::Store,
+                    },
+                    depth_slice: None,
+                })],
+                depth_stencil_attachment: None,
+                timestamp_writes: None,
+                occlusion_query_set: None,
+                multiview_mask: Default::default(),
+            });
+
+            use settings::Mode::*;
+            let view_transform = screen_viewport
+                .map(|ref sv| render::ViewTransform::from_screen_viewport(&self.physical_size, sv))
+                .unwrap_or_default();
+            if self.settings.mode != Normal {
+                // Lines sample the field at their basepoints, then zoom those
+                // positions before applying the screen viewport transform.
+                self.debug_texture.set_view_transform(
+                    queue,
+                    render::ViewTransform {
+                        scale: view_transform
+                            .scale
+                            .map(|scale| scale * self.settings.view_scale),
+                        ..view_transform
+                    },
+                );
+            }
+            match &self.settings.mode {
+                Normal => {
+                    self.lines.set_view_transform(queue, view_transform);
+                    self.lines.draw_lines(&mut rpass);
+                    self.lines.draw_endpoints(&mut rpass);
+                }
+                DebugNoise => {
+                    self.debug_texture.draw_texture(device, &mut rpass, "noise");
+                }
+                DebugFluid => {
+                    self.debug_texture.draw_texture(device, &mut rpass, "fluid");
+                }
+                DebugPressure => {
+                    self.debug_texture
+                        .draw_texture(device, &mut rpass, "pressure");
+                }
+                DebugDivergence => {
+                    self.debug_texture
+                        .draw_texture(device, &mut rpass, "divergence");
+                }
+            };
+        }
+
+        encoder.pop_debug_group();
+    }
+}
+
+// #[derive(Debug)]
+// pub enum Problem {
+//     ReadSettings(String),
+//     ReadImage(std::io::Error),
+//     DecodeColorTexture(image::ImageError),
+//     Render(render::Problem),
+// }
+//
+// impl fmt::Display for Problem {
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         match self {
+//             Problem::ReadSettings(msg) => write!(f, "{}", msg),
+//             Problem::ReadImage(msg) => write!(f, "{}", msg),
+//             Problem::DecodeColorTexture(msg) => write!(f, "Failed to decode image: {}", msg),
+//             Problem::Render(render_msg) => write!(f, "{}", render_msg),
+//         }
+//     }
+// }

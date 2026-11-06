@@ -1,0 +1,46 @@
+[workspace]
+resolver = "2"
+members = ["flux", "flux-desktop"]
+
+[workspace.package]
+version = "0.1.0"
+description = "Flux Windows screensaver, based on Luma and the original Flux by Sander Melnikov"
+edition = "2024"
+license = "MIT"
+license-file = "LICENSE"
+homepage = "https://github.com/LeonCB/flux"
+repository = "https://github.com/LeonCB/flux"
+authors = ["Leon Buitendam", "Kenan Kasumović", "Sander Melnikov <hey@sandydoo.me>"]
+
+# The renderer only needs WGSL; flux-desktop enables the Direct3D 12 backend.
+[workspace.dependencies.wgpu]
+version = "30.0"
+default-features = false
+features = ["std", "parking_lot", "wgsl"]
+
+[workspace.dependencies]
+approx = "0.5.1"
+env_logger = "0.11"
+bytemuck = { version = "1.4", features = ["derive"] }
+flux = { path = "./flux" }
+getrandom = "0.4"
+glam = "0.32"
+half = { version = "2", features = ["bytemuck"] }
+log = "0.4"
+pollster = "0.4"
+rand = { version = "0.10", features = ["thread_rng"] }
+rand_pcg = "0.10"
+rand_seeder = "0.5"
+raw-window-handle = "0.6"
+rustc-hash = "2.1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+winit = "0.30"
+
+[profile.release]
+codegen-units = 1 # Allow further optimisations by disabling parallel compilation
+lto = true        # Enable link-time optimisations
+opt-level = "z"   # Optimise for size; the heavy work runs on the GPU
+panic = "abort"   # Strip expensive panic unwinding code
+strip = true      # Leave debug symbols out of Flux.exe
